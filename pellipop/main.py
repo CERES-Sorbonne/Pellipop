@@ -90,13 +90,13 @@ def main(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_du
 def start():
     #Possibilité de paramétrage dans le terminal/l'invite de commandes
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_folder", type=str, help="Dossier racine contenant les vidéos", nargs='?', const=os.getcwd())
-    parser.add_argument("--frequency", type=int, help="Définition de l'intervalle de temps (en secondes) à laquelle réaliser des captures d'écran. Il faut simplement indiqué une valeur numérique.", nargs='?', const=5)
-    parser.add_argument("--output_folder", type=str, help="Dossier de sortie pour les images extraites", nargs='?', const=os.getcwd())
-    parser.add_argument("--remove_duplicates", type=bool, help="Permet de supprimer les doublons d'images pour un même film en utilisant l'algorithme average hash", nargs='?', const=False)
+    parser.add_argument("--input", type=str, help="Dossier racine contenant les vidéos", default=os.getcwd())
+    parser.add_argument("--frequency", type=int, help="Définition de l'intervalle de temps (en secondes) à laquelle réaliser des captures d'écran. Il faut simplement indiqué une valeur numérique.", default=5)
+    parser.add_argument("--output", type=str, help="Dossier de sortie pour les images extraites", default=os.getcwd())
+    parser.add_argument("--remove_duplicates", type=bool, help="Permet de supprimer les doublons d'images pour un même film en utilisant l'algorithme average hash", default=False, nargs='?', const=True)
     args = parser.parse_args()
 
-    main(input_folder=args.input_folder, intervalle_de_temps=args.frequency, output_folder=args.output_folder, remove_duplicates=args.remove_duplicates)
+    main(input_folder=args.input, intervalle_de_temps=args.frequency, output_folder=args.output, remove_duplicates=args.remove_duplicates)
 
 if __name__ == "__main__":
     start()

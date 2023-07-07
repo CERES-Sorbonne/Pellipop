@@ -8,7 +8,7 @@ def parse_requirements(req_file):
 
 
 NAME = "pellipop"
-VERSION = "0.1.2"
+VERSION = "0.2.0"
 
 # Get dependencies from requirement files
 SETUP_REQUIRES = ['setuptools', 'setuptools-git', 'wheel']
