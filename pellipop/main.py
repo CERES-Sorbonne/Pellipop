@@ -38,14 +38,13 @@ def save_frame_range_sec(video_path, duree, step_sec, output_folder):
         print(f"impossible de lire {video_path}")
         return
         
-    digit = len(str(int(cap.get(cv2.CAP_PROP_FRAME_COUNT))))
     fps = cap.get(cv2.CAP_PROP_FPS)
     fps_inv = 1 / fps
 
     sec = 0
 
     with tqdm(total=round(duree / step_sec), desc=f"Etat d'avancement de : {video_path}") as bar:
-        while True:
+        while sec <= duree:
             n = round(fps * sec)
             cap.set(cv2.CAP_PROP_POS_FRAMES, n)
             ret, frame = cap.read()
@@ -72,13 +71,12 @@ def main(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_du
 
     #Programme de découpe
     for fichier in tqdm(fichiers, desc="Nombre de vidéos traitées"):
-        input_file = os.path.join(input_folder, fichier)
-        duree = int(VideoFileClip(input_file).duration) #calcul la durée de la vidéo pour la gestion de l'affichage de l'avancement du traitement pour chaque vidéo.
+        duree = int(VideoFileClip(fichier).duration) #calcul la durée de la vidéo pour la gestion de l'affichage de l'avancement du traitement pour chaque vidéo.
         
         output_path = os.path.join(output_folder, "output_pellipop", os.path.basename(fichier).split('.')[0].strip().replace(' ', '_'))
         os.makedirs(output_path, exist_ok=True)
         
-        save_frame_range_sec(input_file, duree, intervalle_de_temps, output_path)
+        save_frame_range_sec(fichier, duree, intervalle_de_temps, output_path)
 
         if remove_duplicates:
             delete_duplicates(output_path)
