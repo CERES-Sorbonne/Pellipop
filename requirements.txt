@@ -3,3 +3,5 @@ tqdm
 moviepy
 imagehash
 Pillow
+SpeechRecognition
+ffmpeg
