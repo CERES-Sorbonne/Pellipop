@@ -5,3 +5,4 @@ imagehash
 Pillow
 SpeechRecognition
 ffmpeg
+whisper-client

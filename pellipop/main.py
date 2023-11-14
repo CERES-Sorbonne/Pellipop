@@ -11,7 +11,7 @@ import argparse
 from moviepy.editor import VideoFileClip
 from tqdm.auto import tqdm
 
-from pellipop.speech_to_text import extractText, extractAudio
+from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 
 extensions = (".mov", ".avi", ".mp4", ".flv", ".wmv", ".webm", ".mkv", ".svf")
 
