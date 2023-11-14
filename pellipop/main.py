@@ -99,7 +99,14 @@ def main(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_du
 
     print("Découpe des vidéos en images terminée !")
 
-def extract_audio_then_text(input_folder, output_folder, keep_audio=False):
+def extract_audio_then_text(
+        input_folder,
+        output_folder,
+        keep_audio=False,
+        whisper_config=None,
+        whisper_mode="full",
+        # whisper_output=None
+):
     output_folder_audio = output_folder / "output_audio"
     output_folder_audio.mkdir(parents=True, exist_ok=True)
 
@@ -109,7 +116,21 @@ def extract_audio_then_text(input_folder, output_folder, keep_audio=False):
     extractAudio.toAudioFolder(input_folder, output_folder_audio)
     print("Extraction des fichiers audio terminée !")
 
-    extractText.toTextFolder(output_folder_audio, output_folder_text)
+    if whisper_config is not None:
+        try:
+            whisperMode.main(
+                whisper_config,
+                output_folder_audio,
+                output_folder_text,
+                mode=whisper_mode,
+                folder=True
+            )
+        except Exception as e:
+            print(e)
+            print("Erreur lors de l'extraction du texte avec Whisper")
+            extractText.toTextFolder(output_folder_audio, output_folder_text)
+    else:
+        extractText.toTextFolder(output_folder_audio, output_folder_text)
 
     if not keep_audio:
         for audio in output_folder_audio.glob("*"):
@@ -119,7 +140,16 @@ def extract_audio_then_text(input_folder, output_folder, keep_audio=False):
     print("Extraction du texte terminée !")
 
 
-def pied(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_duplicates=False, keep_audio=False):
+def pied(
+        intervalle_de_temps=5,
+        input_folder=None,
+        output_folder=None,
+        remove_duplicates=False,
+        keep_audio=False,
+        whisper_config=None,
+        whisper_mode="full",
+        # whisper_output=None
+):
     exec_dir = Path(__file__).parent
     print(exec_dir)
 
@@ -132,7 +162,17 @@ def pied(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_du
     if not input_folder.exists():
         raise FileNotFoundError("Le dossier d'entrée n'existe pas")
 
-    t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio))
+    if whisper_config is None:
+        whisper_config = exec_dir / "whisper_config.json"
+    else:
+        whisper_config = Path(whisper_config)
+
+    if not whisper_config.exists():
+        print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
+        whisper_config = None
+
+
+    t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio, whisper_config, whisper_mode))
     t1.start()
 
     t2 = Thread(target=main, args=(intervalle_de_temps, input_folder, output_folder, remove_duplicates))
@@ -147,9 +187,21 @@ def start():
     parser.add_argument("--output", type=str, help="Dossier de sortie pour les images extraites", default=os.getcwd())
     parser.add_argument("--remove_duplicates", type=bool, help="Permet de supprimer les doublons d'images pour un même film en utilisant l'algorithme average hash", default=False, nargs='?', const=True)
     parser.add_argument("--keep_audio", type=bool, help="Permet de garder les fichiers audio extraits des vidéos", default=False, nargs='?', const=True)
+    parser.add_argument("--whisper-config", type=str, help="Chemin vers le fichier de configuration de l'API Whisper", default=os.path.join(os.getcwd(), "whisper_config.json"))
+    parser.add_argument("--whisper-mode", type=str, help="Mode de l'API Whisper", default="full")
+    # parser.add_argument("--whisper-output", type=str, help="Dossier de sortie pour les fichiers de l'API Whisper", default=os.path.join(os.getcwd(), "output_whisper"))
     args = parser.parse_args()
 
-    pied(input_folder=args.input, intervalle_de_temps=args.frequency, output_folder=args.output, remove_duplicates=args.remove_duplicates, keep_audio=args.keep_audio)
+    pied(
+        input_folder=args.input,
+        intervalle_de_temps=args.frequency,
+        output_folder=args.output,
+        remove_duplicates=args.remove_duplicates,
+        keep_audio=args.keep_audio,
+        whisper_config=args.whisper_config,
+        whisper_mode=args.whisper_mode,
+        # whisper_output=args.whisper_output
+    )
 
 if __name__ == "__main__":
     start()
