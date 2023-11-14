@@ -20,7 +20,7 @@ def toAudio(videoPath: str | Path, audioPath: str | Path, extension=".wav"):
         sys.exit(1)
 
     if audioPath.exists():
-        print("The audio file already exists ({audioPath.name})")
+        print(f"The audio file already exists ({audioPath.name})")
 
     subprocess.run(
         ["ffmpeg", "-i", videoPath.as_posix(), audioPath.as_posix()],
