@@ -3,12 +3,12 @@ from threading import Thread
 import cv2
 import os
 from pathlib import Path
-from datetime import time
+# from datetime import time
 
 from PIL import Image
 from imagehash import average_hash
 import argparse
-from moviepy.editor import VideoFileClip
+# from moviepy.editor import VideoFileClip
 from tqdm.auto import tqdm
 
 from pellipop.speech_to_text import extractText, extractAudio, whisperMode
@@ -31,43 +31,53 @@ def delete_duplicates(input_path):
         path.unlink()
     print(f"Suppression de {len(to_delete)} doublons !")
 
-def format_time(fps_inv, n):
-    duree = int(n * fps_inv)
-    heures = duree // 3600  # Nombre d'heures
-    minutes = (duree % 3600) // 60  # Nombre de minutes
-    secondes = (duree % 60)  # Nombre de secondes
+def format_time(frame: int, fps: int) -> str:
+    ## Non optimisé
+    # duree = int(frame / fps)
+    # heures, reste = divmod(duree, 3600)
+    # minutes, secondes = divmod(reste, 60)
+    # return time(heures, minutes, secondes).strftime("%Hh_%Mm_%Ss.jpg")
+    ## Optimisé
+    heures, reste = divmod(frame, 3600 * fps)
+    minutes, secondes = divmod(reste, 60)
+    return f'{heures:02d}h_{minutes:02d}m_{secondes:02d}s.jpg'
 
-    # Formater la durée en une chaîne de caractères dans le format "hh:mm:ss"
-    # return "{:02d}h_{:02d}m_{:02d}s.jpg".format(heures, minutes, secondes)
-    return time(heures, minutes, secondes).strftime("%Hh_%Mm_%Ss.jpg")
+def save_frame_range_sec(video_path, step_sec, output_folder):
+    video = cv2.VideoCapture(video_path.__str__())
 
-def save_frame_range_sec(video_path, duree, step_sec, output_folder):
-    cap = cv2.VideoCapture(video_path.__str__())
-
-    if not cap.isOpened():
+    if not video.isOpened():
         print(f"impossible de lire {video_path}")
         return
         
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    fps_inv = 1 / fps
+    fps = video.get(5)  # CAP_PROP_FPS
+    frame_count = video.get(7)  # CAP_PROP_FRAME_COUNT
 
-    sec = 0
+    frame_count = int(frame_count)
+    fps = int(fps)
 
-    with tqdm(total=round(duree / step_sec), desc=f"Etat d'avancement de : {video_path}") as bar:
-        while sec <= duree:
-            n = round(fps * sec)
-            cap.set(cv2.CAP_PROP_POS_FRAMES, n)
-            ret, frame = cap.read()
-            # file_name = os.path.join(output_folder, format_time(n, fps_inv))
-            file_name = output_folder / format_time(fps_inv, n)
-            if ret:
-                if not cv2.imwrite(str(file_name), frame):
-                    print("error saving image")
-            else:
-                return
-            bar.update(1)
-            sec += step_sec
+    freq = step_sec / fps
 
+    pbar = tqdm(
+        range(0, frame_count, int(fps / freq)),
+        desc=f"Etat d'avancement de : {video_path.name}",
+        unit="frame",
+        leave=False
+    )
+
+    # with tqdm(total=round(duree / step_sec), desc=f"Etat d'avancement de : {video_path}") as bar:
+    for i in pbar:
+        video.set(1, i) # CAP_PROP_POS_FRAMES
+
+        ret, frame = video.read()
+        # file_name = os.path.join(output_folder, format_time(n, fps_inv))
+        file_name = output_folder / format_time(i, fps)
+        if ret:  #  is True différent de == True >
+            if not cv2.imwrite(str(file_name), frame):
+                print("error saving image")
+        else:
+            break
+
+    video.release()
 
 def main(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_duplicates=False):
     #Inscription des vidéos à traiter dans une liste
@@ -83,14 +93,14 @@ def main(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_du
 
     #Programme de découpe
     for fichier in tqdm(fichiers, desc="Nombre de vidéos traitées"):
-        duree = int(VideoFileClip(str(fichier)).duration) #calcul la durée de la vidéo pour la gestion de l'affichage de l'avancement du traitement pour chaque vidéo.
+        # duree = int(VideoFileClip(str(fichier)).duration) #calcul la durée de la vidéo pour la gestion de l'affichage de l'avancement du traitement pour chaque vidéo.
         
         # output_path = os.path.join(output_folder, "output_pellipop", os.path.basename(fichier).split('.')[0].strip().replace(' ', '_'))
         output_path = output_folder / "output_pellipop" / f"{fichier.stem.replace(' ', '_')}"
         # os.makedirs(output_path, exist_ok=True)
         output_path.mkdir(parents=True, exist_ok=True)
         
-        save_frame_range_sec(fichier, duree, intervalle_de_temps, output_path)
+        save_frame_range_sec(fichier, intervalle_de_temps, output_path)
 
         if remove_duplicates:
             delete_duplicates(output_path)
