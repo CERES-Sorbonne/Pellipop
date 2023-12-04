@@ -148,6 +148,7 @@ def pied(
         keep_audio=False,
         whisper_config=None,
         whisper_mode="full",
+        frames_only=False,
         # whisper_output=None
 ):
     exec_dir = Path(__file__).parent
@@ -162,21 +163,24 @@ def pied(
     if not input_folder.exists():
         raise FileNotFoundError("Le dossier d'entrée n'existe pas")
 
-    if whisper_config is None:
-        whisper_config = exec_dir / "whisper_config.json"
+    if not frames_only:
+        if whisper_config is None:
+            whisper_config = exec_dir / "whisper_config.json"
+        else:
+            whisper_config = Path(whisper_config)
+
+        if not whisper_config.exists():
+            print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
+            whisper_config = None
+
+        t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio, whisper_config, whisper_mode))
+        t1.start()
+
+        t2 = Thread(target=main, args=(intervalle_de_temps, input_folder, output_folder, remove_duplicates))
+        t2.start()
+
     else:
-        whisper_config = Path(whisper_config)
-
-    if not whisper_config.exists():
-        print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
-        whisper_config = None
-
-
-    t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio, whisper_config, whisper_mode))
-    t1.start()
-
-    t2 = Thread(target=main, args=(intervalle_de_temps, input_folder, output_folder, remove_duplicates))
-    t2.start()
+        main(intervalle_de_temps, input_folder, output_folder, remove_duplicates)
 
 
 def start():
@@ -189,6 +193,7 @@ def start():
     parser.add_argument("--keep_audio", type=bool, help="Permet de garder les fichiers audio extraits des vidéos", default=False, nargs='?', const=True)
     parser.add_argument("--whisper-config", type=str, help="Chemin vers le fichier de configuration de l'API Whisper", default=os.path.join(os.getcwd(), "whisper_config.json"))
     parser.add_argument("--whisper-mode", type=str, help="Mode de l'API Whisper", default="full")
+    parser.add_argument("--frames-only", type=bool, help="Permet de ne pas extraire le texte des vidéos", default=False, nargs='?', const=True)
     # parser.add_argument("--whisper-output", type=str, help="Dossier de sortie pour les fichiers de l'API Whisper", default=os.path.join(os.getcwd(), "output_whisper"))
     args = parser.parse_args()
 
@@ -200,6 +205,7 @@ def start():
         keep_audio=args.keep_audio,
         whisper_config=args.whisper_config,
         whisper_mode=args.whisper_mode,
+        frames_only=args.frames_only,
         # whisper_output=args.whisper_output
     )
 
