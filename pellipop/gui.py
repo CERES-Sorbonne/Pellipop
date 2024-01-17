@@ -282,7 +282,6 @@ def lancer():
 
 ## ROOT
 
-
 root = ttk.Window(
     "Pellipop",
     themename="journal",
@@ -316,10 +315,18 @@ input_frame.pack()
 input_folder = tk.StringVar(value="Entrez le chemin du dossier à analyser")
 input_entry = ttk.Entry(input_frame, textvariable=input_folder)
 input_button = ttk.Button(input_frame, text="Browse", command=browse_input)
-input_entry.grid(row=0, column=0, columnspan=5, ipadx=100, pady=5)
+input_entry.grid(row=0, column=0, columnspan=5, ipadx=250, pady=5)
 input_button.grid(row=0, column=5, padx=10)
 how_many_str = tk.StringVar(value="0 fichiers trouvés")
 ttk.Label(top_frame, textvariable=how_many_str).pack()
+
+output_frame = ttk.Frame(top_frame, padding=10)
+output_frame.pack()
+output_folder = tk.StringVar(value="Entrez le chemin du dossier de sortie")
+output_entry = ttk.Entry(output_frame, textvariable=output_folder)
+output_button = ttk.Button(output_frame, text="Browse", command=browse_output)
+output_entry.grid(row=0, column=0, columnspan=5, ipadx=250, pady=5)
+output_button.grid(row=0, column=5, padx=10)
 
 ## LEFT FRAME - Découper les vidéos
 left_select_frame = ttk.Frame(main_frame)
@@ -333,16 +340,13 @@ decouper = tk.BooleanVar(value=True)
 decouper_check = ttk.Checkbutton(left_select_frame, variable=decouper)
 decouper_check.grid(row=0, column=2, padx=10)
 
-
 left_frame = ttk.Frame(main_frame, relief="ridge", width=main_frame.winfo_width() / 2, padding=10)
 left_frame.grid(row=2, column=0, sticky="nsew")
 left_lv2_frame = ttk.Frame(left_frame, padding=10)
 left_lv2_frame.pack()
 
-
-
 pics_output_frame = ttk.Frame(left_lv2_frame, padding=10)
-pics_output_frame.grid(row=1, column=0)
+# pics_output_frame.grid(row=1, column=0)
 ttk.Label(pics_output_frame, text='Dossier de sortie').grid(row=0, column=0, columnspan=3)
 pics_output_folder = tk.StringVar(value="Entrez le chemin du dossier de sortie")
 pics_output_entry = ttk.Entry(pics_output_frame, textvariable=pics_output_folder)
@@ -421,16 +425,13 @@ retranscrire = tk.BooleanVar(value=False)
 retranscrire_check = ttk.Checkbutton(right_select_frame, variable=retranscrire)
 retranscrire_check.pack(side="right", padx=10)
 
-
-
 right_frame = ttk.Frame(main_frame, relief="ridge", width=main_frame.winfo_width() / 2, padding=10)
 right_frame.grid(row=2, column=1, sticky="nsew")
 right_lv2_frame = ttk.Frame(right_frame, padding=10)
 right_lv2_frame.pack()
 
-
 text_output_frame = ttk.Frame(right_lv2_frame, padding=10)
-text_output_frame.grid(row=1, column=1)
+# text_output_frame.grid(row=1, column=1)
 ttk.Label(text_output_frame, text='Dossier de sortie').grid(row=0, column=0, columnspan=3)
 text_output_folder = tk.StringVar(value="Entrez le chemin du dossier de sortie")
 text_output_entry = ttk.Entry(text_output_frame, textvariable=text_output_folder)
@@ -452,7 +453,7 @@ import_entry = ttk.Entry(
 
 )
 import_entry.grid(row=1, column=0, columnspan=2, sticky="ew")
-import_button = ttk.Button(import_frame, text="Importer")
+import_button = ttk.Button(import_frame, text="Importer", command=url_import)
 import_button.grid(row=1, column=2)
 
 mode_frame = ttk.Frame(right_lv2_frame, padding=10)
@@ -480,7 +481,8 @@ csv = tk.BooleanVar(value=True)
 csv_check = ttk.Checkbutton(bottom_frame, variable=csv)
 csv_check.grid(row=0, column=2, padx=10)
 
-ttk.Button(bottom_frame, text="Lancer", command=lancer).grid(row=1, column=0, columnspan=3, pady=10, padx=10)
+lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer)
+lancer_button.grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
 if __name__ == '__main__':
     root.mainloop()
