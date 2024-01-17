@@ -199,8 +199,85 @@ def disable_prefix():
         prefix_label["foreground"] = "grey"
 
 
+def validate():
+    errors = []
+
+    if decouper.get():
+        errors.extend(validate_decouper())
+
+    if retranscrire.get():
+        errors.extend(validate_retranscrire())
+
+    if errors:
+        root.bell()
+        print(errors)
+        return
+
+
+def validate_decouper():
+    errors = []
+    if not pics_output_folder.get() or not Path(pics_output_folder.get()).exists():
+        errors.append("Veuillez entrer un dossier de sortie pour les images")
+
+    if mode.get() != "i" and not validate_freq():
+        errors.append("Veuillez entrer une fréquence de découpage valide")
+
+    if prefix.get() and not validate_prefix():
+        errors.append("Veuillez entrer une longueur de préfixe valide")
+
+    return errors
+
+
+def validate_retranscrire():
+    errors = []
+
+    if not text_output_folder.get() or not Path(text_output_folder.get()).exists():
+        errors.append("Veuillez entrer un dossier de sortie pour les fichiers texte")
+
+    if not box.get() or not box.get().lower() in Mode:
+        errors.append("Veuillez entrer un mode de retranscription valide")
+
+    return errors
+
+
 def lancer():
     print("Lancer")
+    validate()
+
+    lancer_button.config(state="disabled")
+
+    config = {
+        "intervalle_de_temps": freq_int.get() if mode.get() != "i" else None,
+        "input_folder": input_folder.get(),
+        "output_folder": output_folder.get(),
+        "remove_duplicates": mode.get() == "i",
+        "keep_audio": False,
+        "whisper_config": None,
+        "whisper_mode": mode.get().lower(),
+        "whisper_timestamped": timestamped.get(),
+        "decouper": decouper.get(),
+        "retranscrire": retranscrire.get(),
+        "csv": csv.get(),
+    }
+
+    try:
+        csv_outp = pied(**config)
+    except Exception as e:
+        print(e)
+        lancer_button.config(state="normal")
+        lancer_button.bell()
+        lancer_button["text"] = "Erreur"
+        lancer_button["foreground"] = "red"
+        return
+
+    lancer_button.config(state="normal")
+    lancer_button["text"] = "Lancer"
+    lancer_button["foreground"] = "green"
+
+    if csv_outp:
+        print(f"Le fichier csv a été généré : {csv_outp}")
+
+    root.focus_force()
 
 
 ## ROOT

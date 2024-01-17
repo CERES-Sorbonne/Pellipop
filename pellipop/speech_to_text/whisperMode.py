@@ -1,9 +1,10 @@
-import sys
 import json
+import sys
 from pathlib import Path
 
-from whisper_client.main import WhisperClient, Mode, Scheme
 from tqdm.auto import tqdm
+from whisper_client.main import WhisperClient, Mode
+
 
 # with open("config.json", "r", encoding="utf-8") as f:
 #     config_data = json.load(f)
@@ -26,7 +27,14 @@ def rm_tree(pth: Path) -> None:
     # pth.rmdir()
 
 
-def toText(config_data, audioPath: str | Path, textPath: str | Path, wc: WhisperClient = None, mode: Mode = Mode.full):
+def toText(
+        config_data,
+        audioPath: str | Path,
+        textPath: str | Path,
+        wc: WhisperClient = None,
+        mode: Mode = Mode.full,
+        timestamped: bool = False,
+):
     if isinstance(audioPath, str):
         audioPath = Path(audioPath)
     if isinstance(textPath, str):
@@ -52,7 +60,13 @@ def toText(config_data, audioPath: str | Path, textPath: str | Path, wc: Whisper
 
     wc.wait_for_result(hash_audio=hash_)
 
-    res = wc.get_result_with_mode(mode=mode, hash_audio=hash_)
+    res = wc.get_result_with_mode(
+        mode=mode if not timestamped else Mode.full,
+        hash_audio=hash_
+    )
+
+    if timestamped:
+        raise NotImplementedError("timestamped mode not implemented yet")
 
     with open(textPath, "w", encoding="utf-8") as f:
         if isinstance(res, dict):
@@ -68,7 +82,8 @@ def toTextFolder(
         audioPath: str | Path,
         textPath: str | Path,
         wc: WhisperClient = None,
-        mode: Mode = Mode.full
+        mode: Mode = Mode.full,
+        timestamped: bool = False,
 ):
     if isinstance(audioPath, str):
         audioPath = Path(audioPath)
@@ -95,7 +110,7 @@ def toTextFolder(
         text = textPath / audio.with_suffix(".json").name \
             if mode != Mode.text else textPath / audio.with_suffix(".txt").name
 
-        toText(config_data, audio, text, wc=wc, mode=mode)
+        toText(config_data, audio, text, wc=wc, mode=mode, timestamped=timestamped)
 
 
 def main(
@@ -104,7 +119,8 @@ def main(
         textPath: str | Path,
         wc: WhisperClient = None,
         mode: Mode | str = Mode.full,
-        folder: bool = False
+        folder: bool = False,
+        timestamped: bool = False,
 ):
     if isinstance(config_data, str):
         config_data = Path(config_data)
@@ -139,10 +155,9 @@ def main(
         )
 
     if folder:
-        toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode)
+        toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode, timestamped=timestamped)
     else:
-        toText(config_data, audioPath, textPath, wc=wc, mode=mode)
-
+        toText(config_data, audioPath, textPath, wc=wc, mode=mode, timestamped=timestamped)
 
 
 if __name__ == "__main__":

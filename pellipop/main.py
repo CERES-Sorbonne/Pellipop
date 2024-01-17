@@ -115,6 +115,7 @@ def extract_audio_then_text(
         keep_audio=False,
         whisper_config=None,
         whisper_mode="full",
+        whisper_timestamped=False,
         # whisper_output=None
 ):
     output_folder_audio = output_folder / "output_audio"
@@ -133,7 +134,8 @@ def extract_audio_then_text(
                 output_folder_audio,
                 output_folder_text,
                 mode=whisper_mode,
-                folder=True
+                folder=True,
+                timestamped=whisper_timestamped,
             )
         except Exception as e:
             print(e)
@@ -158,7 +160,10 @@ def pied(
         keep_audio=False,
         whisper_config=None,
         whisper_mode="full",
-        frames_only=False,
+        whisper_timestamped=False,
+        decouper=True,
+        retranscrire=False,
+        csv=False,
         # whisper_output=None
 ):
     exec_dir = Path(__file__).parent
@@ -183,14 +188,23 @@ def pied(
             print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
             whisper_config = None
 
-        t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio, whisper_config, whisper_mode))
-        t1.start()
+        if decouper:
+            t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio, whisper_config, whisper_mode))
+            t1.start()
+        else:
+            extract_audio_then_text(input_folder, output_folder, keep_audio, whisper_config, whisper_mode, whisper_timestamped)
 
-        t2 = Thread(target=main, args=(intervalle_de_temps, input_folder, output_folder, remove_duplicates))
-        t2.start()
+    if decouper:
+        if retranscrire:
+            t2 = Thread(target=main, args=(intervalle_de_temps, input_folder, output_folder, remove_duplicates))
+            t2.start()
 
-    else:
-        main(intervalle_de_temps, input_folder, output_folder, remove_duplicates)
+        else:
+            main(intervalle_de_temps, input_folder, output_folder, remove_duplicates)
+
+    if csv:
+        print("Création du fichier CSV")
+
 
 
 def start():
