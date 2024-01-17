@@ -1,12 +1,72 @@
+import json
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 
+import requests
 import ttkbootstrap as ttk
 import validators
 from whisper_client.main import Mode
 
+from main import pied
+
 video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
+
+
+class URLImportError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+        import_label["text"] = message
+        import_label["foreground"] = "red"
+        import_entry.config(state="normal")
+
+
+def url_import():
+    configfile = Path.home() / ".whisperrc"
+    if configfile.exists():
+        print("Le fichier de configuration existe déjà, il sera écrasé")
+        with configfile.open(mode="r", encoding="utf-8") as f:
+            print(json.load(f, indent=4))
+
+    url = import_file.get()
+
+    if not url:
+        return
+
+    if not validate_url():
+        import_error()
+        return
+
+    import_entry.config(state="disabled")
+    import_button.config(state="disabled")
+
+    import_label["foreground"] = "grey"
+
+    import_label["text"] = "Importation en cours..."
+
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        config = r.json()
+    except requests.exceptions.HTTPError as errh:
+        raise URLImportError(f"Erreur HTTP : {errh}")
+    except requests.exceptions.ConnectionError as errc:
+        raise URLImportError(f"Erreur de connexion : {errc}")
+    except requests.exceptions.Timeout as errt:
+        raise URLImportError(f"Timeout : {errt}")
+    except requests.exceptions.RequestException as err:
+        raise URLImportError(f"Erreur : {err}")
+    except json.decoder.JSONDecodeError as err:
+        raise URLImportError(f"Erreur JSON : {err}")
+
+    print("Le format du fichier de configuration est correct")
+    print(json.dumps(config, indent=4))
+
+    with configfile.open(mode="w", encoding="utf-8") as f:
+        json.dump(config, f)
+
+    import_label["text"] = "Importation terminée !"
+    import_label["foreground"] = "green"
 
 
 def browse(path_var, default_path=Path.home()):
