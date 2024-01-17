@@ -69,9 +69,7 @@ def url_import():
     import_label["foreground"] = "green"
 
 
-def browse(path_var, default_path=Path.home()):
-    assert isinstance(path_var, tk.StringVar)
-
+def browse(path_var, default_path=Path.home(), add_suffix=None):
     path = path_var.get()
 
     if path == "Entrez le chemin du dossier à analyser":
@@ -95,6 +93,11 @@ def browse(path_var, default_path=Path.home()):
 
     print(path)
 
+    if add_suffix:
+        path = Path(path) / add_suffix
+        if not path.exists():
+            path.mkdir(parents=True)
+
     path_var.set(path)
 
     return path
@@ -110,11 +113,15 @@ def browse_input():
 
 
 def browse_pic_output():
-    browse(pics_output_folder, default_path=Path().cwd() / "pellipop_pics")
+    browse(pics_output_folder, default_path=Path().cwd(), add_suffix="pellipop_pics")
 
 
 def browse_text_output():
-    browse(text_output_folder, default_path=Path().cwd() / "pellipop_text")
+    browse(text_output_folder, default_path=Path().cwd(), add_suffix="pellipop_text")
+
+
+def browse_output():
+    browse(output_folder, default_path=Path().cwd(), add_suffix="pellipop_output")
 
 
 def validatepositiveint(var):
