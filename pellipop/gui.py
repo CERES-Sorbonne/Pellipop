@@ -5,8 +5,8 @@ from tkinter import filedialog
 
 import ttkbootstrap as ttk
 
-from main import launch, video_formats, how_many_files
-from whisper_from_url import WhisperFromUrl, URLImportError
+from pellipop.main import Pellipop, video_formats, how_many_files
+from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 
 class URLImportGUIError(Exception):
@@ -200,7 +200,9 @@ def lancer():
     }
 
     try:
-        csv_outp = launch(**config)
+        pelli = Pellipop(**config)
+        csv_outp = pelli.launch()
+
     except Exception as e:
         print(e)
         lancer_button.config(state="normal")
@@ -217,7 +219,6 @@ def lancer():
         print(f"Le fichier csv a été généré : {csv_outp}")
 
     root.focus_force()
-
 
 ## ROOT
 
@@ -397,6 +398,9 @@ csv_check.grid(row=0, column=2, padx=10)
 lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer)
 lancer_button.grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
-if __name__ == '__main__':
+def main():
     wu = WhisperFromUrl()
     root.mainloop()
+
+if __name__ == '__main__':
+    main()
