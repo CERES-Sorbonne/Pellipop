@@ -61,12 +61,9 @@ def toText(
     wc.wait_for_result(hash_audio=hash_)
 
     res = wc.get_result_with_mode(
-        mode=mode if not timestamped else Mode.full,
+        mode=mode,
         hash_audio=hash_
     )
-
-    if timestamped:
-        raise NotImplementedError("timestamped mode not implemented yet")
 
     with open(textPath, "w", encoding="utf-8") as f:
         if isinstance(res, dict):
@@ -83,7 +80,6 @@ def toTextFolder(
         textPath: str | Path,
         wc: WhisperClient = None,
         mode: Mode = Mode.full,
-        timestamped: bool = False,
 ):
     if isinstance(audioPath, str):
         audioPath = Path(audioPath)
@@ -110,7 +106,7 @@ def toTextFolder(
         text = textPath / audio.with_suffix(".json").name \
             if mode != Mode.text else textPath / audio.with_suffix(".txt").name
 
-        toText(config_data, audio, text, wc=wc, mode=mode, timestamped=timestamped)
+        toText(config_data, audio, text, wc=wc, mode=mode)
 
 
 def main(
@@ -120,7 +116,6 @@ def main(
         wc: WhisperClient = None,
         mode: Mode | str = Mode.full,
         folder: bool = False,
-        timestamped: bool = False,
 ):
     if isinstance(config_data, str):
         config_data = Path(config_data)
@@ -155,9 +150,9 @@ def main(
         )
 
     if folder:
-        toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode, timestamped=timestamped)
+        toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode)
     else:
-        toText(config_data, audioPath, textPath, wc=wc, mode=mode, timestamped=timestamped)
+        toText(config_data, audioPath, textPath, wc=wc, mode=mode)
 
 
 if __name__ == "__main__":
