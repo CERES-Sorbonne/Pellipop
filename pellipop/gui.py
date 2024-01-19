@@ -5,8 +5,9 @@ from tkinter import filedialog
 
 import ttkbootstrap as ttk
 
-from pellipop.main import Pellipop, video_formats, how_many_files
+from pellipop.main import Pellipop, how_many_files, default_output_path
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
+
 
 
 class URLImportGUIError(Exception):
@@ -158,7 +159,8 @@ def disable_prefix():
 
 def validate():
     errors = []
-    if not output_folder.get() or not Path(output_folder.get()).exists():
+    out_fold = output_folder.get()
+    if out_fold != default_output_path and (not out_fold or not Path(out_fold).exists()):
         errors.append("Veuillez entrer un dossier de sortie pour les images")
 
     if mode.get() != "i" and not validate_freq():
@@ -193,7 +195,7 @@ def lancer():
         "freq": freq,
         "input_folder": input_folder.get(),
         "output_folder": output_folder.get(),
-        "remove_duplicates": mode.get() == "i",
+        "delete_duplicates": mode.get() == "i",
         "decouper": decouper.get(),
         "retranscrire": retranscrire.get(),
         "csv": csv.get(),
@@ -208,12 +210,13 @@ def lancer():
         lancer_button.config(state="normal")
         lancer_button.bell()
         lancer_button["text"] = "Erreur"
-        lancer_button["foreground"] = "red"
+        # lancer_button["foreground"] = "red"
         return
 
     lancer_button.config(state="normal")
     lancer_button["text"] = "Lancer"
-    lancer_button["foreground"] = "green"
+    # lancer_button["foreground"] = "green"
+    # TODO : Alternative to foreground
 
     if csv_outp:
         print(f"Le fichier csv a été généré : {csv_outp}")
@@ -267,7 +270,7 @@ output_frame = ttk.Frame(top_frame, padding=10)
 output_frame.pack()
 output_label = ttk.Label(output_frame, text='Entrez le chemin du dossier de sortie')
 output_label.grid(row=0, column=0, columnspan=6)
-output_folder = tk.StringVar(value=(Path.home() / "Documents" / "Pellipop").__str__() + "/")
+output_folder = tk.StringVar(value=default_output_path)
 output_entry = ttk.Entry(output_frame, textvariable=output_folder)
 output_button = ttk.Button(output_frame, text="Browse", command=browse_output)
 output_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)

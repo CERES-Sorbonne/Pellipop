@@ -10,6 +10,7 @@ from tqdm.auto import tqdm
 from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 
 video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
+default_output_path = f'{Path.home() / "Documents" / "Pellipop"}/'
 
 
 def file_finder(path: str | Path, deep: int = -1) -> Path:
