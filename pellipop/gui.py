@@ -9,7 +9,6 @@ from pellipop.main import Pellipop, how_many_files, default_output_path
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 
-
 class URLImportGUIError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -19,6 +18,7 @@ class URLImportGUIError(Exception):
 
 
 def url_import():
+    global wu
     url = import_file.get()
 
     if not url:
@@ -402,6 +402,7 @@ lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer)
 lancer_button.grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
 def main():
+    global wu
     wu = WhisperFromUrl()
     root.mainloop()
 

@@ -1,5 +1,7 @@
-from setuptools import setup, find_packages
 import os
+
+from setuptools import setup, find_packages
+
 
 def parse_requirements(req_file):
     with open(req_file) as fp:
@@ -18,6 +20,7 @@ LONG_DESCRIPTION = ""
 with open(os.path.join(os.path.dirname(__file__), 'readme.md'), 'r') as f:
     LONG_DESCRIPTION = f.read()
 
+
 def setup_package():
     metadata = dict(name=NAME,
                     version=VERSION,
@@ -35,6 +38,7 @@ def setup_package():
                     packages=find_packages())
 
     setup(**metadata)
+
 
 if __name__ == "__main__":
     setup_package()
