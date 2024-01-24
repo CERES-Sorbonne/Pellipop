@@ -28,7 +28,7 @@ def rm_tree(pth: Path) -> None:
 
 
 def toText(
-        config_data,
+        config_data: dict,
         audioPath: str | Path,
         textPath: str | Path,
         wc: WhisperClient = None,
@@ -75,7 +75,7 @@ def toText(
 
 
 def toTextFolder(
-        config_data,
+        config_data: dict,
         audioPath: str | Path,
         textPath: str | Path,
         wc: WhisperClient = None,
