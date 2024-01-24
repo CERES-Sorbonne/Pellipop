@@ -10,27 +10,8 @@ from tqdm.auto import tqdm
 from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 from pellipop.fileFinder import file_finder, how_many_files
 
-video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
 default_output_path = f'{Path.home() / "Documents" / "Pellipop"}/'
 
-
-def file_finder(path: str | Path, deep: int = -1) -> Path:
-    if isinstance(path, str):
-        path = Path(path)
-
-    for file in path.glob("*"):
-        if file.is_dir():
-            if deep == -1:
-                yield from file_finder(file)
-            elif deep > 0:
-                yield from file_finder(file, deep - 1)
-
-        elif file.suffix in video_formats:
-            yield file
-
-
-def how_many_files(path: str | Path, deep: int = -1) -> int:
-    return len(list(file_finder(path, deep)))
 
 
 class Pellipop:
