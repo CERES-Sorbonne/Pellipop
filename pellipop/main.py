@@ -39,6 +39,7 @@ class Pellipop:
 
     def __init__(
             self,
+            *args,
             freq: float,
             input_folder: str | Path,
             output_folder: str | Path = Path.home() / "Documents" / "Pellipop",
@@ -50,6 +51,12 @@ class Pellipop:
             whisper_config: dict = None,
             keep_audio: bool = False,
     ):
+        if args:
+            raise
+
+        self.t1 = None
+        self.t2 = None
+
         self.freq = freq
         self.input_folder = input_folder
         self.output_folder = output_folder
