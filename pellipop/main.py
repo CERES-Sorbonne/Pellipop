@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from threading import Thread
 from typing import Optional
@@ -28,6 +29,9 @@ class Pellipop:
             decouper: bool = False,
             retranscrire: bool = False,
             csv: bool = False,
+            only_text: bool = False,
+
+            on_progress: callable = None,
 
             whisper_config: dict = None,
             keep_audio: bool = False,
@@ -45,6 +49,8 @@ class Pellipop:
         self.decouper = decouper
         self.retranscrire = retranscrire
         self.csv = csv
+        self.only_text = only_text
+
 
         self.whisper_config = whisper_config
         self.keep_audio = keep_audio
@@ -106,6 +112,9 @@ class Pellipop:
         if self.csv:
             print("Création du fichier CSV")
             self.create_csv()
+
+        if self.only_text:
+            self._only_text()
 
         self.completed = True
 
@@ -253,6 +262,19 @@ class Pellipop:
             self.outputs["audio"].rmdir()
 
         return self.outputs["text"]
+
+    def _only_text(self):
+        """Go from json to txt"""
+        jsons = list(file_finder(self.outputs["text"], format="json"))
+
+        for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
+            with json_file.open(mode="r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            with json_file.with_suffix(".txt").open(mode="w", encoding="utf-8") as f:
+                f.write(data["text"])
+
+            json_file.unlink()
 
     def create_csv(self):
         pass
