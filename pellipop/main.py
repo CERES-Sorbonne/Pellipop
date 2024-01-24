@@ -8,6 +8,7 @@ from imagehash import average_hash
 from tqdm.auto import tqdm
 
 from pellipop.speech_to_text import extractText, extractAudio, whisperMode
+from pellipop.fileFinder import file_finder, how_many_files
 
 video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
 default_output_path = f'{Path.home() / "Documents" / "Pellipop"}/'
