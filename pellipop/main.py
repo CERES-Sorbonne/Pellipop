@@ -34,6 +34,7 @@ def how_many_files(path: str | Path, deep: int = -1) -> int:
 
 
 class Pellipop:
+    default_whisper_config = Path.home() / ".whisperrc"
     video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
 
     def __init__(
@@ -231,12 +232,17 @@ class Pellipop:
         self.outputs["text"] = self.output_folder / "text"
         self.outputs["text"].mkdir(parents=True, exist_ok=True)
 
+        print("Extraction de l'audio")
+
         extractAudio.toAudioFolder(self.input_folder, self.outputs["audio"])
 
-        if self.whisper_config is not None:
+        print("Extraction de l'audio terminée !")
+
+        print("Extraction du texte")
+        if self.whisper_config is not None or self.default_whisper_config.exists():
             try:
                 whisperMode.main(
-                    self.whisper_config,
+                    self.whisper_config or self.default_whisper_config,
                     self.outputs["audio"],
                     self.outputs["text"],
                     mode="full",
@@ -246,7 +252,9 @@ class Pellipop:
                 print(e)
                 print("Erreur lors de l'extraction du texte avec Whisper")
                 extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
+
         else:
+            print("Aucun fichier de configuration Whisper passé en argument, extraction du texte avec Google Speech-to-Text")
             extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
 
         print("Extraction du texte terminée !")
