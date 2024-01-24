@@ -95,11 +95,11 @@ class Pellipop:
                 print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
                 self.whisper_config = None
 
-        if self.decouper:
-            self.t1 = Thread(target=self.extract_audio_then_text)
-            self.t1.start()
-        else:
-            self.extract_audio_then_text()  # (input_folder, output_folder, audio, whisper_config)
+            if self.decouper:
+                self.t1 = Thread(target=self.extract_audio_then_text)
+                self.t1.start()
+            else:
+                self.extract_audio_then_text()  # (input_folder, output_folder, audio, whisper_config)
 
         if self.decouper:
             if self.retranscrire:
@@ -108,6 +108,12 @@ class Pellipop:
 
             else:
                 self.decouper_video()  # (freq, input_folder, output_folder, delete_duplicates)
+
+        # Wait for threads to finish (needed for the csv creation and the only_text conversion to work)
+        if self.t1 is not None:
+            self.t1.join()
+        if self.t2 is not None:
+            self.t2.join()
 
         if self.csv:
             print("Création du fichier CSV")
@@ -208,6 +214,7 @@ class Pellipop:
         video.release()
 
     def decouper_video(self) -> Optional[Path]:
+        print("Découpage des vidéos")
         self.outputs["video"] = self.output_folder / "video"
 
         for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit="video", total=self.hm):
@@ -251,7 +258,8 @@ class Pellipop:
                 extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
 
         else:
-            print("Aucun fichier de configuration Whisper passé en argument, extraction du texte avec Google Speech-to-Text")
+            print("Aucun fichier de configuration Whisper passé en argument, "
+                  "extraction du texte avec Google Speech-to-Text")
             extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
 
         print("Extraction du texte terminée !")
