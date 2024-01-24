@@ -260,11 +260,21 @@ class Pellipop:
             for audio in self.outputs["audio"].glob("*"):
                 audio.unlink()
             self.outputs["audio"].rmdir()
+        else:
+            self.outputs["audio"] = None
 
         return self.outputs["text"]
 
+
     def _only_text(self):
         """Go from json to txt"""
+        if not self.outputs["text"]:
+            return
+        if not self.outputs["text"].exists():
+            raise FileNotFoundError("Le dossier de sortie n'existe pas")
+        if not self.outputs["text"].is_dir():
+            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
+
         jsons = list(file_finder(self.outputs["text"], format="json"))
 
         for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
