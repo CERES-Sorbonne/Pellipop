@@ -14,7 +14,6 @@ permissions:
 defaults:
   run:
     shell: bash
-    working-directory: app
 
 jobs:
   Build:
@@ -38,7 +37,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-#          cache: 'pip'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
