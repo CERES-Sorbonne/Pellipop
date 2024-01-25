@@ -1,0 +1,163 @@
+[project.scripts]
+pellipop = "pellipop.gui:main"
+pellipop-cli = "pellipop.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pellipop"
+dynamic = ["version"]
+description = "A graphical and command-line tool to extract key frames from videos along with their retranscription."
+readme = "readme.md"
+readme-content-type = "text/markdown"
+requires-python = ">=3.10"
+license = "MPL-2.0"
+license-file = "LICENSE.txt"
+keywords = [
+    "video",
+    "keyframes",
+    "frame",
+    "speech",
+    "speech-to-text",
+    "transcription",
+    "STT",
+    "panoptic",
+]
+authors = [
+    { name = "EdouardBoute", email = "" },
+    { name = "Marceau-h", email = "pypi@marceau-h.fr" },
+    { name = "Orion Alié", email = "someonefefe@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "ffmpeg",
+    "imagehash~=4.3.1",
+    "moviepy~=1.0.3",
+    "opencv-python~=4.8.1.78",
+    "Pillow~=10.0.1",
+    "requests~=2.31.0",
+    "SpeechRecognition",
+    "tqdm~=4.66.1",
+    "ttkbootstrap~=1.10.1",
+    "validators~=0.22.0",
+    "whisper-client>=0.3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/CERES-Sorbonne/Pellipop"
+Documentation = "https://github.com/CERES-Sorbonne/Pellipop#readme"
+Issues = "https://github.com/CERES-Sorbonne/Pellipop/issues"
+Source = "https://github.com/CERES-Sorbonne/Pellipop"
+
+[tool.hatch.version]
+path = "pellipop/__about__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/pellipop",
+]
+
+[tool.hatch.envs.default]
+dependencies = [
+    "coverage[toml]>=6.5",
+    "pytest",
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+    "- coverage combine",
+    "coverage report",
+]
+cov = [
+    "test-cov",
+    "cov-report",
+]
+
+[[tool.hatch.envs.all.matrix]]
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+target-version = ["py310", "py311", "py312"]
+line-length = 120
+select = [
+    "A",
+    "ARG",
+    "B",
+    "C",
+    "DTZ",
+    "E",
+    "EM",
+    "F",
+    "FBT",
+    "I",
+    "ICN",
+    "ISC",
+    "N",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "Q",
+    "RUF",
+    "S",
+    "T",
+    "TID",
+    "UP",
+    "W",
+    "YTT",
+]
+ignore = [
+    # Allow non-abstract empty methods in abstract base classes
+    "B027",
+    # Allow boolean positional values in function calls, like `dict.get(... True)`
+    "FBT003",
+    # Ignore checks for possible passwords
+    "S105", "S106", "S107",
+    # Ignore complexity
+    "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+]
+unfixable = [
+    # Don't touch unused imports
+    "F401",
+]
+
+[tool.ruff.isort]
+known-first-party = ["pellipop"]
+
+[tool.ruff.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports
+"tests/**/*" = ["PLR2004", "S101", "TID252"]
+
+[tool.coverage.run]
+source_pkgs = ["pellipop", "tests"]
+branch = true
+parallel = true
+omit = [
+    "pellipop/__about__.py",
+]
+
+[tool.coverage.paths]
+pellipop = ["pellipop"]
+
+
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
