@@ -14,7 +14,6 @@ permissions:
 defaults:
   run:
     shell: bash
-#    working-directory: Pellipop
 
 jobs:
   Build:
@@ -29,7 +28,7 @@ jobs:
           - windows-latest
 
     runs-on: ${{ matrix.os }}
-#    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -54,13 +53,8 @@ jobs:
           pyinstaller pellipop/gui.py \
           --onefile \
           --name=pellipop-${{ matrix.os }} \
-          --hidden-import='PIL._tkinter_finder' 
-
-      - name: get the ls
-        run: |
-          set -x
-            ls -l
-          ls -l dist
+          --hidden-import='PIL._tkinter_finder' \
+          --windowed
 
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
@@ -68,3 +62,20 @@ jobs:
           name: pellipop-${{ matrix.os }}
           path: ./dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
+
+  release:
+    name: Release binaries
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create Release
+        uses: elgohr/Github-Release-Action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          title: MyReleaseMessage
+
+
+
