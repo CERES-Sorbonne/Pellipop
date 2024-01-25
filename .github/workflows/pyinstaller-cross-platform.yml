@@ -16,6 +16,20 @@ defaults:
     shell: bash
 
 jobs:
+  release:
+    name: Release binaries
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create Release
+        uses: elgohr/Github-Release-Action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          title: MyReleaseMessage
+
   Build:
     name: Build release binaries
 
@@ -63,19 +77,17 @@ jobs:
           path: ./dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
 
-  release:
-    name: Release binaries
-    needs: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create Release
-        uses: elgohr/Github-Release-Action@v5
+      - name: Add artifact to the release
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          title: MyReleaseMessage
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/pellipop-${{ matrix.os }}*
+          asset_name: pellipop-${{ matrix.os }}
+          asset_content_type: application/zip
+
+
 
 
 
