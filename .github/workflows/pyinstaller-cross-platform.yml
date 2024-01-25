@@ -61,7 +61,6 @@ jobs:
           set -x
             ls -l
           ls -l dist
-          ls ${{ pwd }}
 
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
