@@ -19,16 +19,16 @@ jobs:
   Build:
     name: Build release binaries
 
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        os:
-#          - macos-latest
-#          - ubuntu-latest
-#          - windows-latest
-#
-#    runs-on: ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    runs-on: ${{ matrix.os }}
+#    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
