@@ -51,7 +51,7 @@ jobs:
 
       - name: Build with pyinstaller
         run: |
-          pyinstaller gui.py \
+          pyinstaller pellipop/gui.py \
           --onefile --name=pellipop-${{ matrix.os }} \
           --hidden-import='PIL._tkinter_finder' 
 
