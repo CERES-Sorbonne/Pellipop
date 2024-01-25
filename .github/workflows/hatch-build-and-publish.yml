@@ -17,6 +17,7 @@ jobs:
 
     environment: release
     permissions:
+      contents: write
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
@@ -31,12 +32,17 @@ jobs:
           python -m pip install --upgrade pip 
           pip install hatch
       - name: Build package
-        run: hatch build
-      #      - name: Test package
-      #        run: hatch run test
+        run: |
+          hatch version fix
+          hatch build
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@v1.8.11
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          repository-url: https://test.pypi.org/legacy/
+      - name: Update the about.py file
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update about.py file"
+          file_pattern: "about.py"
+          status_options: '--untracked-files=no'
