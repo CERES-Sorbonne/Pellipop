@@ -58,5 +58,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: pellipop-${{ matrix.os }}
-          path: Pellipop/Pellipop/dist/pellipop-${{ matrix.os }}*
+          path: /home/runner/work/Pellipop/Pellipop/dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
