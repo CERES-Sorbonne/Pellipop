@@ -14,6 +14,7 @@ permissions:
 defaults:
   run:
     shell: bash
+#    working-directory: Pellipop
 
 jobs:
   Build:
@@ -50,7 +51,7 @@ jobs:
 
       - name: Build with pyinstaller
         run: |
-          pyinstaller pellipop/gui.py \
+          pyinstaller Pellipop/gui.py \
           --onefile --name=pellipop-${{ matrix.os }} \
           --hidden-import='PIL._tkinter_finder' 
 
@@ -58,5 +59,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pellipop-${{ matrix.os }}
-          path: /home/runner/work/Pellipop/Pellipop/dist/pellipop-${{ matrix.os }}*
+          path: Pellipop/dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
