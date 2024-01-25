@@ -1,0 +1,58 @@
+name: Cross-platform executable
+run-name: PyInstaller by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      -
+permissions:
+  contents: write
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+    working-directory: app
+
+jobs:
+  Build:
+    name: Build release binaries
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          pip install .
+
+      - name: Build with pyinstaller
+        run: |
+          pyinstaller pellipop/gui.py \
+          --onefile --name=pellipop-${{ matrix.os }} \
+          --hidden-import='PIL._tkinter_finder' 
+
+      - name: Deploy artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pellipop-${{ matrix.os }}
+          path: pellipop/dist/pellipop-${{ matrix.os }}*
+          if-no-files-found: error
