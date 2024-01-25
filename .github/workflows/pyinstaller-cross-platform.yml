@@ -23,9 +23,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-#          - macos-latest
+          - macos-latest
           - ubuntu-latest
-#          - windows-latest
+          - windows-latest
 
     runs-on: ${{ matrix.os }}
 #    runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
           --hidden-import='PIL._tkinter_finder' 
 
       - name: Deploy artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: pellipop-${{ matrix.os }}
           path: /home/runner/work/Pellipop/Pellipop/dist/pellipop-${{ matrix.os }}*
