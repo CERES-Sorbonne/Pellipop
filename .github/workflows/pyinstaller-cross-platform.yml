@@ -57,6 +57,7 @@ jobs:
         uses: liudonghua123/delete-release-action@v1
         with:
           release_name: ${{ needs.envs.outputs.ver }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   check:
     runs-on: ubuntu-latest
@@ -169,4 +170,4 @@ jobs:
 #              ./dist/pellipop-ubuntu-latest-${{ needs.envs.outputs.ver }}
 #              ./dist/pellipop-macos-latest-${{ needs.envs.outputs.ver }}
 #              ./dist/pellipop-windows-latest-${{ needs.envs.outputs.ver }}.exe
-#
+
