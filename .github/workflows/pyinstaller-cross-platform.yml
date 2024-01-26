@@ -26,6 +26,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Set env
         id: set-env
         run: |
@@ -45,6 +46,7 @@ jobs:
           echo $TAG
           echo $REF
           echo $DATE
+
     outputs:
       ver: ${{ env.VER }}
       tag: ${{ env.TAG }}
@@ -52,8 +54,6 @@ jobs:
       date: ${{ env.DATE }}
 
   delete-if-exists:
-    #    if: curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/liudonghua123/pellipop/releases/tags/${{ needs.envs.outputs.date }} | grep -q 200
-
     runs-on: ubuntu-latest
     needs:
       - envs
@@ -71,13 +71,6 @@ jobs:
           
             echo "delete=$delete" >> $GITHUB_ENV
 
-#      - name: Remove latest tag
-#        uses: dev-drprasad/delete-tag-and-release@v1.0
-#        with:
-#          tag_name: latest
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          delete_release: false
-
       - name: Delete release
         uses: dev-drprasad/delete-tag-and-release@v1.0
         with:
@@ -90,7 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - envs
-
     steps:
       - name: Verify
         run: |
@@ -101,7 +93,6 @@ jobs:
 
   build:
     name: Build release binaries
-
     strategy:
       fail-fast: false
       matrix:
@@ -109,12 +100,9 @@ jobs:
           - macos-latest
           - ubuntu-latest
           - windows-latest
-
     needs:
       - envs
-
     runs-on: ${{ matrix.os }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -135,14 +123,11 @@ jobs:
           pip install .
 
       - name: Fix linux msgcat
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            sudo apt-get install gettext
-            sudo ln -s /usr/bin/msgcat /usr/local/bin/msgcat
-            cp ./linux-fix/msgcat.py /opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/ttkbootstrap/localization/msgcat.py
-          
-          
-          fi
+          sudo apt-get install gettext
+          sudo ln -s /usr/bin/msgcat /usr/local/bin/msgcat
+          cp ./linux-fix/msgcat.py /opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/ttkbootstrap/localization/msgcat.py 
 
       - name: Build with pyinstaller
         run: |
@@ -150,29 +135,40 @@ jobs:
 
           pyinstaller pellipop/gui.py \
           --onefile \
-          --name=pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }} \
+          --name=pellipop \
           --hidden-import='PIL._tkinter_finder' \
           --windowed 
+
+      - name: Create short os name
+        id: os
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            OS=mac
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            OS=linux
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            OS=win
+          fi
+            echo "OS=$OS" >> $GITHUB_ENV
 
         #      - name: Fake build
         #        run: |
         #          mkdir -p ./dist
         #          echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
 
-
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pellipop-${{ matrix.os }}
-          path: ./dist/pellipop-${{ matrix.os }}*
+          name: pellipop-${{ os.outputs.OS }}-${{ needs.envs.outputs.ver }}
+          path: ./dist/pellipop*
           if-no-files-found: error
+
 
   release:
     if: '!cancelled()'
     needs:
       - build
       - envs
-
     name: Release binaries
     runs-on: ubuntu-latest
     steps:
@@ -188,9 +184,6 @@ jobs:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: |
             ${{ needs.envs.outputs.tag }}
-#            ${{ needs.envs.outputs.date }}
-#            latest
-          #          tag_name: '${{ needs.envs.outputs.tag }}:${{ needs.envs.outputs.date }}'
           body: |
             Pellipop release for commit ${{ github.sha }}
           draft: ${{ needs.envs.outputs.tag != 'latest' }}
