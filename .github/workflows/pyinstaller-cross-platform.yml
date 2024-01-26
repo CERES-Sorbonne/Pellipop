@@ -35,6 +35,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
           title: MyReleaseMessage
+
+    outputs:
+        version: ${{ steps.step_version.outputs.version }}
+        upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
   Build:
     name: Build release binaries
 
@@ -87,7 +91,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./dist/pellipop-${{ matrix.os }}*
           asset_name: pellipop-${{ matrix.os }}
           asset_content_type: application/zip
