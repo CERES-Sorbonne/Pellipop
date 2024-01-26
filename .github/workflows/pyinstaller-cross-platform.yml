@@ -44,9 +44,6 @@ jobs:
           echo $TAG
           echo $REF
     outputs:
-#        ver: ${{ steps.set-env.outputs.VER }}
-#        tag: ${{ steps.set-env.outputs.TAG }}
-#        ref: ${{ steps.set-env.outputs.REF }}
         ver: ${{ env.VER }}
         tag: ${{ env.TAG }}
         ref: ${{ env.REF }}
@@ -63,50 +60,6 @@ jobs:
           echo "TAG=${{ needs.envs.outputs.tag }}"
           echo "REF=${{ needs.envs.outputs.ref }}"
           
-    
-  
-
-  #  release:
-#    name: Release binaries
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v3
-#
-#      - name: release
-#        id: release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          name: ${{ env.VER }}
-#          tag_name: ${{ env.TAG }}
-#          body: |
-#              Pellipop release for commit ${{ github.sha }}
-#          draft: false
-#          prerelease: false
-#
-#
-#
-#    #      - name: Release
-##        uses: softprops/action-gh-release@v1
-##        with:
-##          if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
-##          na
-##
-##          name: ${{ github.ref.replace('refs/tags/v', 'Version') if startsWith(github.ref, 'refs/tags/v') else Latest }}
-##          tag_name: ${{ github.ref.replace('refs/tags/', '') if startsWith(github.ref, 'refs/tags/v') else latest }}
-##          body: |
-##            Pellipop release for commit ${{ github.sha }}
-##          draft: false
-##          prerelease: false
-#
-#
-#
-#    outputs:
-#        upload_url: ${{ steps.release.outputs.upload_url }}
-#        version: ${{ steps.release.outputs.tag_name }}
-#        name: ${{ steps.release.outputs.name }}
-#        ver: ${{ steps.set-env.outputs.VER }}
-#        tag: ${{ steps.set-env.outputs.TAG }}
 
   build:
     name: Build release binaries
@@ -115,9 +68,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-#          - macos-latest
+          - macos-latest
           - ubuntu-latest
-#          - windows-latest
+          - windows-latest
 
     needs:
       - envs
@@ -164,31 +117,6 @@ jobs:
           path: ./dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
 
-#      - name: Add artifact to the release
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-#        with:
-#          upload_url: ${{ needs.release.outputs.upload_url }}
-#          asset_path: ./dist/pellipop-${{ matrix.os }}*
-#          asset_name: pellipop-${{ matrix.os }}
-#          asset_content_type: application/octet-stream
-#      - name: Cache binaries
-#        uses: actions/cache@v2
-#        with:
-#          path: ./dist/pellipop-${{ matrix.os }}*
-#          key: ${{ runner.os }}-pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
-#          restore-keys: |
-#            ${{ runner.os }}-pellipop-${{ matrix.os }}-
-#            ${{ runner.os }}-pellipop-
-#            ${{ runner.os }}-
-#
-#
-#    outputs:
-#      cache-hit: ${{ steps.cache.outputs.cache-hit }}
-
-
-
   release:
     needs:
       - build
@@ -212,22 +140,8 @@ jobs:
               Pellipop release for commit ${{ github.sha }}
           draft: false
           prerelease: false
-#          overwrite: true
           files: |
               ./dist/pellipop-ubuntu-latest-${{ needs.envs.outputs.ver }}
+              ./dist/pellipop-macos-latest-${{ needs.envs.outputs.ver }}
+              ./dist/pellipop-windows-latest-${{ needs.envs.outputs.ver }}
               
-                
-              
-
-#      - name: Add artifact to the release
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-#        with:
-#          upload_url: ${{ needs.release.outputs.upload_url }}
-#          asset_path: ./dist/pellipop-${{ matrix.os }}*
-#          asset_name: pellipop-${{ matrix.os }}
-#          asset_content_type: application/octet-stream
-
-
-
