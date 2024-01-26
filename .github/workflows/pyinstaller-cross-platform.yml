@@ -25,11 +25,11 @@ jobs:
     name: Release binaries
     runs-on: ubuntu-latest
     steps:
-      - id: step_version
-        run: echo "::set-output name=version::${{ steps.package_version.outputs.version }}"
-
-      - id: step_upload_url
-        run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
+#      - id: step_version
+#        run: echo "::set-output name=version::${{ steps.package_version.outputs.version }}"
+#
+#      - id: step_upload_url
+#        run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,8 +41,8 @@ jobs:
           title: MyReleaseMessage
 
     outputs:
-        version: ${{ steps.step_version.outputs.version }}
-        upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        version: ${{ steps.package_version.outputs.version }}
   build:
     name: Build release binaries
 
