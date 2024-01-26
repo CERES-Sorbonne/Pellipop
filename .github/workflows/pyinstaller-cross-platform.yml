@@ -44,9 +44,12 @@ jobs:
           echo $TAG
           echo $REF
     outputs:
-          ver: ${{ env.VER }}
-          tag: ${{ env.TAG }}
-          ref: ${{ env.REF }}
+        ver: ${{ steps.set-env.outputs.VER }}
+        tag: ${{ steps.set-env.outputs.TAG }}
+        ref: ${{ steps.set-env.outputs.REF }}
+#        ver: ${{ env.VER }}
+#        tag: ${{ env.TAG }}
+#        ref: ${{ env.REF }}
 
   check:
     runs-on: ubuntu-latest
