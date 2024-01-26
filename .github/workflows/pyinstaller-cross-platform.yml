@@ -98,6 +98,8 @@ jobs:
 
       - name: Build with pyinstaller
         run: |
+          ls pellipop
+
           pyinstaller pellipop/gui.py \
           --onefile \
           --name=pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }} \
