@@ -128,6 +128,7 @@ jobs:
           if-no-files-found: error
 
   release:
+    if: '!cancelled()'
     needs:
       - build
       - envs
