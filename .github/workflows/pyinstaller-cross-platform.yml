@@ -32,6 +32,7 @@ jobs:
         uses: elgohr/Github-Release-Action@main
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
           title: MyReleaseMessage
 
