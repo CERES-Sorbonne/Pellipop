@@ -30,18 +30,50 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Release
+      - name: Set env
+        run: |
+            if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
+              echo "REF=${{ github.ref }}" >> $GITHUB_ENV
+              echo "VER=`expr match $ref 'v\([0-9]*\.[0-9]*\.[0-9]*\)'`" >> $GITHUB_ENV
+              echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*_[0-9]*'`" >> $GITHUB_ENV
+            else
+                echo "REF=${{ github.ref }}" >> $GITHUB_ENV
+                echo "VER=latest" >> $GITHUB_ENV
+                echo "TAG=latest" >> $GITHUB_ENV
+            fi
+      - name: release
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ github.ref.replace('refs/tags/v', 'Version') if startsWith(github.ref, 'refs/tags/v') else Latest }}
-          tag_name: ${{ github.ref.replace('refs/tags/', '') if startsWith(github.ref, 'refs/tags/v') else latest }}
+          name: ${{ env.VER }}
+          tag_name: ${{ env.TAG }}
           body: |
-            Pellipop release for commit ${{ github.sha }}
+              Pellipop release for commit ${{ github.sha }}
           draft: false
           prerelease: false
+
+
+
+    #      - name: Release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
+#          na
+#
+#          name: ${{ github.ref.replace('refs/tags/v', 'Version') if startsWith(github.ref, 'refs/tags/v') else Latest }}
+#          tag_name: ${{ github.ref.replace('refs/tags/', '') if startsWith(github.ref, 'refs/tags/v') else latest }}
+#          body: |
+#            Pellipop release for commit ${{ github.sha }}
+#          draft: false
+#          prerelease: false
+
+
+
     outputs:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        version: ${{ steps.create_release.outputs.tag }}
+        upload_url: ${{ steps.release.outputs.upload_url }}
+        version: ${{ steps.release.outputs.tag_name }}
+        name: ${{ steps.release.outputs.name }}
+        ver: ${{ steps.set-env.outputs.VER }}
+        tag: ${{ steps.set-env.outputs.TAG }}
 
   build:
     name: Build release binaries
@@ -83,7 +115,7 @@ jobs:
         run: |
           pyinstaller pellipop/gui.py \
           --onefile \
-          --name=pellipop-${{ matrix.os }} \
+          --name=pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }} \
           --hidden-import='PIL._tkinter_finder' \
           --windowed
 
