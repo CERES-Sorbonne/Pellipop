@@ -36,7 +36,6 @@ jobs:
           else
               echo "REF=${{ github.ref }}" >> $GITHUB_ENV
               echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-#              echo "TAG=latest" >> $GITHUB_ENV
               echo "TAG=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           fi
           
