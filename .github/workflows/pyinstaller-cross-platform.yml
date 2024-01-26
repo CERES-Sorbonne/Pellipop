@@ -62,6 +62,9 @@ jobs:
           echo "VER=${{ needs.envs.outputs.ver }}"
           echo "TAG=${{ needs.envs.outputs.tag }}"
           echo "REF=${{ needs.envs.outputs.ref }}"
+          echo $VER
+          echo $TAG
+          echo $REF
           
     
   
