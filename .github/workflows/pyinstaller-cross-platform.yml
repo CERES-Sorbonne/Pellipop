@@ -58,6 +58,7 @@ jobs:
         with:
           release_name: ${{ needs.envs.outputs.ver }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          suppress_errors: true
 
   check:
     runs-on: ubuntu-latest
