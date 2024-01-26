@@ -21,22 +21,25 @@ defaults:
     shell: bash
 
 jobs:
-#  release:
-#    name: Release binaries
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-#      - name: Create Release
-#        uses: elgohr/Github-Release-Action@main
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          title: MyReleaseMessage
-#          tag_name: ${{ github.ref }}
-#    outputs:
-#        upload_url: ${{ steps.create_release.outputs.upload_url }}
-#        version: ${{ steps.create_release.outputs.tag }}
+  release:
+    name: Release binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Version ${{ github.sha }}
+          tag_name: ${{ github.sha }}
+          body: |
+            Pellipop release for commit ${{ github.sha }}
+          draft: false
+          prerelease: false
+    outputs:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        version: ${{ steps.create_release.outputs.tag }}
 
   build:
     name: Build release binaries
@@ -49,8 +52,8 @@ jobs:
           - ubuntu-latest
           - windows-latest
 
-#    needs:
-#      - release
+    needs:
+      - release
 
 
     runs-on: ${{ matrix.os }}
@@ -89,27 +92,17 @@ jobs:
           path: ./dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
 
-#      - name: Add artifact to the release
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-#        with:
-#          upload_url: ${{ needs.release.outputs.upload_url }}
-#          asset_path: ./dist/pellipop-${{ matrix.os }}*
-#          asset_name: pellipop-${{ matrix.os }}
-#          asset_content_type: application/zip
-
-
-
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Add artifact to the release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          name: pellipop-${{ matrix.os }}
-          tag_name: test
-          files: ./dist/pellipop-${{ matrix.os }}*
-          body: |
-            Pellipop release for ${{ matrix.os }}
-          draft: false
-          prerelease: false
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./dist/pellipop-${{ matrix.os }}*
+          asset_name: pellipop-${{ matrix.os }}
+
+
+
+
+
 
