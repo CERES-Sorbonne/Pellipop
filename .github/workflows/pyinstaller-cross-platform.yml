@@ -198,8 +198,13 @@ jobs:
     name: Release binaries
     runs-on: ubuntu-latest
     steps:
+      -  name: Download binaries
+         uses: actions/download-artifact@v2
+         with:
+           name: pellipop-${{ matrix.os }}
+           path: ./dist
+           if-no-files-found: error
       - name: release
-        id: release
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ needs.envs.outputs.ver }}
