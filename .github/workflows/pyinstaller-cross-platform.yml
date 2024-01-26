@@ -184,7 +184,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ needs.envs.outputs.ver }}
-          tag_name: '${{ needs.envs.outputs.tag }}:${{ needs.envs.outputs.date }}'
+          tag_name: ${{ needs.envs.outputs.tag }}
+#          tag_name: '${{ needs.envs.outputs.tag }}:${{ needs.envs.outputs.date }}'
           body: |
               Pellipop release for commit ${{ github.sha }}
           draft: ${{ needs.envs.outputs.tag != 'latest' }}
