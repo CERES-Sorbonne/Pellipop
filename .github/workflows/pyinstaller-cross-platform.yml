@@ -99,7 +99,7 @@ jobs:
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             sudo apt-get install gettext
             sudo ln -s /usr/bin/msgcat /usr/local/bin/msgcat
-            cp ./linux-fix/msgcat.py /usr/local/lib/python3.12/site-packages/ttkbootstrap/localization/msgcat.py
+            cp ./linux-fix/msgcat.py /opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/ttkbootstrap/localization/msgcat.py
           
           
           fi
