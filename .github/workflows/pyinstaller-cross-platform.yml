@@ -199,9 +199,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -  name: Download binaries
-         uses: actions/download-artifact@v2
+         uses: actions/download-artifact@v4
          with:
-           name: pellipop-*
+           merge-multiple: true
            path: ./dist
            if-no-files-found: error
       - name: release
@@ -215,7 +215,8 @@ jobs:
           prerelease: false
 #          overwrite: true
           files: |
-              ./dist/pellipop-*
+              ./dist/pellipop-ubuntu-latest-${{ needs.envs.outputs.ver }}
+              
                 
               
 
