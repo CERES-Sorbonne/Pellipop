@@ -174,19 +174,19 @@ jobs:
 #          asset_path: ./dist/pellipop-${{ matrix.os }}*
 #          asset_name: pellipop-${{ matrix.os }}
 #          asset_content_type: application/octet-stream
-      - name: Cache binaries
-        uses: actions/cache@v2
-        with:
-          path: ./dist/pellipop-${{ matrix.os }}*
-          key: ${{ runner.os }}-pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
-          restore-keys: |
-            ${{ runner.os }}-pellipop-${{ matrix.os }}-
-            ${{ runner.os }}-pellipop-
-            ${{ runner.os }}-
-              
-
-    outputs:
-      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+#      - name: Cache binaries
+#        uses: actions/cache@v2
+#        with:
+#          path: ./dist/pellipop-${{ matrix.os }}*
+#          key: ${{ runner.os }}-pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
+#          restore-keys: |
+#            ${{ runner.os }}-pellipop-${{ matrix.os }}-
+#            ${{ runner.os }}-pellipop-
+#            ${{ runner.os }}-
+#
+#
+#    outputs:
+#      cache-hit: ${{ steps.cache.outputs.cache-hit }}
 
 
 
@@ -201,7 +201,7 @@ jobs:
       -  name: Download binaries
          uses: actions/download-artifact@v2
          with:
-           name: pellipop-${{ matrix.os }}
+           name: pellipop-*
            path: ./dist
            if-no-files-found: error
       - name: release
@@ -215,7 +215,7 @@ jobs:
           prerelease: false
 #          overwrite: true
           files: |
-              ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
+              ./dist/pellipop-*
                 
               
 
