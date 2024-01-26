@@ -39,7 +39,7 @@ jobs:
               echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*_[0-9]*'`" >> $GITHUB_ENV
             else
                 echo "REF=${{ github.ref }}" >> $GITHUB_ENV
-                echo "VER=latest" >> $GITHUB_ENV
+                echo "VER=date::$(date +'%Y-%m-%d')" >> $GITHUB_ENV
                 echo "TAG=latest" >> $GITHUB_ENV
             fi
       - name: release
@@ -136,6 +136,7 @@ jobs:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./dist/pellipop-${{ matrix.os }}*
           asset_name: pellipop-${{ matrix.os }}
+          asset_content_type: application/octet-stream
 
 
 
