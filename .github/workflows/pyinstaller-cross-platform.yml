@@ -46,6 +46,12 @@ jobs:
               VER=date::$(date +'%Y-%m-%d')
               TAG=latest
           fi
+          echo "VER=${{ env.VER }}"
+          echo "TAG=${{ env.TAG }}"
+          echo "REF=${{ env.REF }}"
+          echo $VER
+          echo $TAG
+          echo $REF
     outputs:
         ver: ${{ steps.set-env.outputs.VER }}
         tag: ${{ steps.set-env.outputs.TAG }}
