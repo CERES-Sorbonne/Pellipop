@@ -36,7 +36,8 @@ jobs:
           else
               echo "REF=${{ github.ref }}" >> $GITHUB_ENV
               echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-              echo "TAG=latest" >> $GITHUB_ENV
+#              echo "TAG=latest" >> $GITHUB_ENV
+              echo "TAG=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           fi
           
           echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
@@ -71,12 +72,12 @@ jobs:
           
             echo "delete=$delete" >> $GITHUB_ENV
 
-      - name: Remove latest tag
-        uses: dev-drprasad/delete-tag-and-release@v1.0
-        with:
-          tag_name: latest
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          delete_release: false
+#      - name: Remove latest tag
+#        uses: dev-drprasad/delete-tag-and-release@v1.0
+#        with:
+#          tag_name: latest
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          delete_release: false
 
       - name: Delete release
         uses: dev-drprasad/delete-tag-and-release@v1.0
@@ -188,8 +189,8 @@ jobs:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: |
             ${{ needs.envs.outputs.tag }}
-            ${{ needs.envs.outputs.date }}
-            latest
+#            ${{ needs.envs.outputs.date }}
+#            latest
           #          tag_name: '${{ needs.envs.outputs.tag }}:${{ needs.envs.outputs.date }}'
           body: |
             Pellipop release for commit ${{ github.sha }}
