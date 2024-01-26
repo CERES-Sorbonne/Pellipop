@@ -152,7 +152,9 @@ jobs:
           draft: false
           prerelease: false
           files: |
-              ./dist/pellipop-ubuntu-latest-${{ needs.envs.outputs.ver }}
-              ./dist/pellipop-macos-latest-${{ needs.envs.outputs.ver }}
-              ./dist/pellipop-windows-latest-${{ needs.envs.outputs.ver }}.exe
-              
+              ./dist/*
+#          files: |
+#              ./dist/pellipop-ubuntu-latest-${{ needs.envs.outputs.ver }}
+#              ./dist/pellipop-macos-latest-${{ needs.envs.outputs.ver }}
+#              ./dist/pellipop-windows-latest-${{ needs.envs.outputs.ver }}.exe
+#
