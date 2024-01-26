@@ -185,7 +185,7 @@ jobs:
               Pellipop release for commit ${{ github.sha }}
           draft: false
           prerelease: false
-          overwrite: true
+#          overwrite: true
           files: |
               ./dist/pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }}
                 
