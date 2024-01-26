@@ -43,9 +43,24 @@ jobs:
     outputs:
         ver: ${{ steps.set-env.outputs.VER }}
         tag: ${{ steps.set-env.outputs.TAG }}
+        ref: ${{ steps.set-env.outputs.REF }}
 
+  check:
+    runs-on: ubuntu-latest
+    needs:
+      - envs
 
-#  release:
+    steps:
+      - name: Verify
+        run: |
+          echo "VER=${{ needs.envs.outputs.ver }}"
+          echo "TAG=${{ needs.envs.outputs.tag }}"
+          echo "REF=${{ needs.envs.outputs.ref }}"
+          
+    
+  
+
+  #  release:
 #    name: Release binaries
 #    runs-on: ubuntu-latest
 #    steps:
