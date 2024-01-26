@@ -26,6 +26,8 @@ jobs:
   envs:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Set env
         id: set-env
         run: |
@@ -131,7 +133,7 @@ jobs:
       - name: Fake build
         run: |
           mkdir -p ./dist
-          touch ./dist/pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }}
+          touch ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
           echo "Fake build for ${{ matrix.os }}"
         
 
@@ -155,7 +157,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./dist/pellipop-${{ matrix.os }}*
-          key: ${{ runner.os }}-pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }}
+          key: ${{ runner.os }}-pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
           restore-keys: |
             ${{ runner.os }}-pellipop-${{ matrix.os }}-
             ${{ runner.os }}-pellipop-
@@ -187,7 +189,7 @@ jobs:
           prerelease: false
 #          overwrite: true
           files: |
-              ./dist/pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }}
+              ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
                 
               
 
