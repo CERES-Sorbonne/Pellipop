@@ -35,10 +35,16 @@ jobs:
             echo "REF=${{ github.ref }}" >> $GITHUB_ENV
             echo "VER=`expr match $ref 'v\([0-9]*\.[0-9]*\.[0-9]*\)'`" >> $GITHUB_ENV
             echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*_[0-9]*'`" >> $GITHUB_ENV
+            REF=${{ github.ref }}
+            VER=`expr match $ref 'v\([0-9]*\.[0-9]*\.[0-9]*\)'`
+            TAG=`expr match $ref 'v[0-9]*_[0-9]*_[0-9]*'`
           else
               echo "REF=${{ github.ref }}" >> $GITHUB_ENV
               echo "VER=date::$(date +'%Y-%m-%d')" >> $GITHUB_ENV
               echo "TAG=latest" >> $GITHUB_ENV
+              REF=${{ github.ref }}
+              VER=date::$(date +'%Y-%m-%d')
+              TAG=latest
           fi
     outputs:
         ver: ${{ steps.set-env.outputs.VER }}
