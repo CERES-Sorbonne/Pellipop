@@ -10,6 +10,11 @@ on:
 permissions:
   contents: write
   packages: write
+  issues: write
+  pull-requests: write
+  deployments: write
+
+
 
 defaults:
   run:
@@ -31,8 +36,7 @@ jobs:
       - name: Create Release
         uses: elgohr/Github-Release-Action@main
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           title: MyReleaseMessage
 
