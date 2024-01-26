@@ -105,6 +105,7 @@ jobs:
           --onefile \
           --name=pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }} \
           --hidden-import='PIL._tkinter_finder' \
+          --hidden-import='PIL._tkinter' \
           --windowed
 
 #      - name: Fake build
