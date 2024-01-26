@@ -38,6 +38,7 @@ jobs:
               echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
               echo "TAG=latest" >> $GITHUB_ENV
           fi
+          
           echo $VER
           echo $TAG
           echo $REF
@@ -45,6 +46,17 @@ jobs:
         ver: ${{ env.VER }}
         tag: ${{ env.TAG }}
         ref: ${{ env.REF }}
+
+  delete-if-exists:
+    if: curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/liudonghua123/pellipop/releases/tags/${{ needs.envs.outputs.tag }} | grep -q 200
+    runs-on: ubuntu-latest
+    needs:
+      - envs
+    steps:
+      - name: Delete release
+        uses: liudonghua123/delete-release-action@v1
+        with:
+          release_name: 'latest'
 
   check:
     runs-on: ubuntu-latest
@@ -149,8 +161,8 @@ jobs:
           tag_name: ${{ needs.envs.outputs.tag }}
           body: |
               Pellipop release for commit ${{ github.sha }}
-          draft: false
-          prerelease: false
+          draft: ${{ needs.envs.outputs.tag != 'latest' }}
+          prerelease: ${{ needs.envs.outputs.tag != 'latest' }}
           files: |
               ./dist/*
 #          files: |
