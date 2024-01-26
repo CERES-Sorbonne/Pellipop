@@ -49,8 +49,8 @@ jobs:
           - ubuntu-latest
           - windows-latest
 
-    needs:
-      - release
+#    needs:
+#      - release
 
 
     runs-on: ${{ matrix.os }}
