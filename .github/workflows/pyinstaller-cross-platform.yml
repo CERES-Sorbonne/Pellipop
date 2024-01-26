@@ -39,7 +39,7 @@ jobs:
     outputs:
         version: ${{ steps.step_version.outputs.version }}
         upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
-  Build:
+  build:
     name: Build release binaries
 
     strategy:
@@ -49,6 +49,10 @@ jobs:
           - macos-latest
           - ubuntu-latest
           - windows-latest
+
+    needs:
+      - release
+
 
     runs-on: ${{ matrix.os }}
 
