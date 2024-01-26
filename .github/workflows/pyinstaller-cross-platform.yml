@@ -23,59 +23,67 @@ defaults:
     shell: bash
 
 jobs:
-  release:
-    name: Release binaries
+  envs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Set env
         id: set-env
         run: |
-            if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
+          if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
+            echo "REF=${{ github.ref }}" >> $GITHUB_ENV
+            echo "VER=`expr match $ref 'v\([0-9]*\.[0-9]*\.[0-9]*\)'`" >> $GITHUB_ENV
+            echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*_[0-9]*'`" >> $GITHUB_ENV
+          else
               echo "REF=${{ github.ref }}" >> $GITHUB_ENV
-              echo "VER=`expr match $ref 'v\([0-9]*\.[0-9]*\.[0-9]*\)'`" >> $GITHUB_ENV
-              echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*_[0-9]*'`" >> $GITHUB_ENV
-            else
-                echo "REF=${{ github.ref }}" >> $GITHUB_ENV
-                echo "VER=date::$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-                echo "TAG=latest" >> $GITHUB_ENV
-            fi
-      - name: release
-        id: release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: ${{ env.VER }}
-          tag_name: ${{ env.TAG }}
-          body: |
-              Pellipop release for commit ${{ github.sha }}
-          draft: false
-          prerelease: false
-
-
-
-    #      - name: Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
-#          na
-#
-#          name: ${{ github.ref.replace('refs/tags/v', 'Version') if startsWith(github.ref, 'refs/tags/v') else Latest }}
-#          tag_name: ${{ github.ref.replace('refs/tags/', '') if startsWith(github.ref, 'refs/tags/v') else latest }}
-#          body: |
-#            Pellipop release for commit ${{ github.sha }}
-#          draft: false
-#          prerelease: false
-
-
-
+              echo "VER=date::$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+              echo "TAG=latest" >> $GITHUB_ENV
+          fi
     outputs:
-        upload_url: ${{ steps.release.outputs.upload_url }}
-        version: ${{ steps.release.outputs.tag_name }}
-        name: ${{ steps.release.outputs.name }}
         ver: ${{ steps.set-env.outputs.VER }}
         tag: ${{ steps.set-env.outputs.TAG }}
+
+
+#  release:
+#    name: Release binaries
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: release
+#        id: release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          name: ${{ env.VER }}
+#          tag_name: ${{ env.TAG }}
+#          body: |
+#              Pellipop release for commit ${{ github.sha }}
+#          draft: false
+#          prerelease: false
+#
+#
+#
+#    #      - name: Release
+##        uses: softprops/action-gh-release@v1
+##        with:
+##          if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
+##          na
+##
+##          name: ${{ github.ref.replace('refs/tags/v', 'Version') if startsWith(github.ref, 'refs/tags/v') else Latest }}
+##          tag_name: ${{ github.ref.replace('refs/tags/', '') if startsWith(github.ref, 'refs/tags/v') else latest }}
+##          body: |
+##            Pellipop release for commit ${{ github.sha }}
+##          draft: false
+##          prerelease: false
+#
+#
+#
+#    outputs:
+#        upload_url: ${{ steps.release.outputs.upload_url }}
+#        version: ${{ steps.release.outputs.tag_name }}
+#        name: ${{ steps.release.outputs.name }}
+#        ver: ${{ steps.set-env.outputs.VER }}
+#        tag: ${{ steps.set-env.outputs.TAG }}
 
   build:
     name: Build release binaries
@@ -89,8 +97,7 @@ jobs:
           - windows-latest
 
     needs:
-      - release
-
+      - envs
 
     runs-on: ${{ matrix.os }}
 
@@ -128,18 +135,64 @@ jobs:
           path: ./dist/pellipop-${{ matrix.os }}*
           if-no-files-found: error
 
-      - name: Add artifact to the release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#      - name: Add artifact to the release
+#        uses: actions/upload-release-asset@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#        with:
+#          upload_url: ${{ needs.release.outputs.upload_url }}
+#          asset_path: ./dist/pellipop-${{ matrix.os }}*
+#          asset_name: pellipop-${{ matrix.os }}
+#          asset_content_type: application/octet-stream
+      - name: Cache binaries
+        uses: actions/cache@v2
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./dist/pellipop-${{ matrix.os }}*
-          asset_name: pellipop-${{ matrix.os }}
-          asset_content_type: application/octet-stream
+          path: ./dist/pellipop-${{ matrix.os }}*
+          key: ${{ runner.os }}-pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }}
+          restore-keys: |
+            ${{ runner.os }}-pellipop-${{ matrix.os }}-
+            ${{ runner.os }}-pellipop-
+            ${{ runner.os }}-
+              
+
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
 
 
 
+  release:
+    needs:
+      - build
+      - envs
+    name: Release binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: release
+        id: release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ needs.build.outputs.ver }}
+          tag_name: ${{ needs.build.outputs.tag }}
+          body: |
+              Pellipop release for commit ${{ github.sha }}
+          draft: false
+          prerelease: false
+          if ${{ needs.build.outputs.cache-hit }} == 'true': |
+          overwrite: true
+          files: |
+              ./dist/pellipop-${{ matrix.os }}-${{ needs.release.outputs.ver }}
+                
+              
+
+#      - name: Add artifact to the release
+#        uses: actions/upload-release-asset@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#        with:
+#          upload_url: ${{ needs.release.outputs.upload_url }}
+#          asset_path: ./dist/pellipop-${{ matrix.os }}*
+#          asset_name: pellipop-${{ matrix.os }}
+#          asset_content_type: application/octet-stream
 
 
 
