@@ -56,7 +56,7 @@ jobs:
       - name: Delete release
         uses: liudonghua123/delete-release-action@v1
         with:
-          release_name: 'latest'
+          release_name: ${{ needs.envs.outputs.ver }}
 
   check:
     runs-on: ubuntu-latest
