@@ -154,8 +154,7 @@ jobs:
       - name: Fake build
         run: |
           mkdir -p ./dist
-          touch ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
-          echo "Fake build for ${{ matrix.os }}"
+          echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
         
 
       - name: Deploy artifacts
