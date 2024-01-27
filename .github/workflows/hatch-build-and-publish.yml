@@ -6,36 +6,67 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     environment: release
-    permissions:
-      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: nelonoel/branch-name@v1.0.1
+
+      - name: Which ref
+        id: branch-name
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "REF=master" >> $GITHUB_ENV
+          else
+              echo "REF=${{ steps.branch-name.outputs.branch-name }}" >> $GITHUB_ENV
+            fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            ref: ${{ env.REF }}
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
           cache: 'pip'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip 
           pip install hatch
+
       - name: Build package
-        run: hatch build
-      #      - name: Test package
-      #        run: hatch run test
+        run: |
+          hatch version fix
+          hatch build
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@v1.8.11
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/ # uncomment for test.pypi.org
+
+      - name: Update the about.py file
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update about.py file"
+          file_pattern: "pellipop/__about__.py"
+          status_options: '--untracked-files=no'
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            branch: ${{ env.REF }}
