@@ -33,8 +33,8 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
             echo "REF=${{ github.ref }}" >> $GITHUB_ENV
-            echo "VER=`expr match $ref 'v\([0-9]*\.[0-9]*\(\.[0-9]*\)?\)'`" >> $GITHUB_ENV
-            echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*\(\.[0-9]*\)?'`" >> $GITHUB_ENV
+            echo "VER=`expr match $ref 'v\([0-9]*\.[0-9]*\.[0-9]*\)'`" >> $GITHUB_ENV
+            echo "TAG=`expr match $ref 'v[0-9]*_[0-9]*\.[0-9]*\'`" >> $GITHUB_ENV
           else
               echo "REF=${{ github.ref }}" >> $GITHUB_ENV
               echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
