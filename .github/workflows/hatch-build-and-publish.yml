@@ -40,12 +40,13 @@ jobs:
         run: |
           hatch version fix
           hatch build
+          hatch publish -r test -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
 
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@v1.8.11
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+#      - name: Publish package
+#        uses: pypa/gh-action-pypi-publish@v1.8.11
+#        with:
+#          user: __token__
+#          password: ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Update the about.py file
         uses: stefanzweifel/git-auto-commit-action@v5
