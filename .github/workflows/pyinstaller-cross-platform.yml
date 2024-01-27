@@ -159,7 +159,7 @@ jobs:
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pellipop-${{ os.outputs.OS }}-${{ needs.envs.outputs.ver }}
+          name: pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
           path: ./dist/pellipop*
           if-no-files-found: error
 
