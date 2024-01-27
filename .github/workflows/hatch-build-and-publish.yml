@@ -28,6 +28,7 @@ jobs:
             echo "REF=master" >> $GITHUB_ENV
           else
               echo "REF=${{ steps.branch-name.outputs.branch-name }}" >> $GITHUB_ENV
+            fi
 
       - name: Checkout repository
         uses: actions/checkout@v4
