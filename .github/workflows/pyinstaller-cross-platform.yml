@@ -13,13 +13,11 @@ on:
 permissions:
   contents: write
   packages: write
-  issues: write
-  pull-requests: write
-  deployments: write
+#  deployments: write
 
 defaults:
   run:
-    shell: bash
+    shell: bash # Use bash shell for every os
 
 jobs:
   envs:
@@ -28,8 +26,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-
       - name: Set env
         id: set-env
         run: |
@@ -37,19 +33,16 @@ jobs:
             echo "REF=${{ github.ref }}" >> $GITHUB_ENV
             echo "TAG=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
             echo "VER=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
-          
           else
               echo "REF=${{ github.ref }}" >> $GITHUB_ENV
               echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
               echo "TAG=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           fi
-          
           echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-          
-          echo $VER
-          echo $TAG
-          echo $REF
-          echo $DATE
+    #     echo $VER
+    #     echo $TAG
+    #     echo $REF
+    #     echo $DATE
 
     outputs:
       ver: ${{ env.VER }}
@@ -66,14 +59,7 @@ jobs:
         run: |
           curl_res=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/liudonghua123/pellipop/releases/tags/${{ needs.envs.outputs.date }})
           echo $curl_res
-          
-            if [[ $curl_res == 200 ]]; then
-                delete=true
-            else
-                delete=false
-            fi
-          
-            echo "delete=$delete" >> $GITHUB_ENV
+          echo "delete=($curl_res == 200)" >> $GITHUB_ENV
 
       - name: Delete release
         uses: dev-drprasad/delete-tag-and-release@v1.0
@@ -155,10 +141,10 @@ jobs:
           --hidden-import='PIL._tkinter_finder' \
           --windowed 
 
-        #      - name: Fake build
-        #        run: |
-        #          mkdir -p ./dist
-        #          echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
+        #- name: Fake build
+        #  run: |
+        #mkdir -p ./dist
+        #echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
 
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
@@ -166,6 +152,7 @@ jobs:
           name: pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
           path: ./dist/pellipop*
           if-no-files-found: error
+
 
   release:
     if: '!cancelled()'
