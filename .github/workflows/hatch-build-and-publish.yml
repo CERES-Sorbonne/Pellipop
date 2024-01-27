@@ -43,11 +43,17 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-      #   repository-url: https://test.pypi.org/legacy/ # uncomment for test.pypi.org
+          repository-url: https://test.pypi.org/legacy/ # uncomment for test.pypi.org
 
       - name: Update the about.py file
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update about.py file"
-          file_pattern: "about.py"
+          file_pattern: "pellipop/about.py"
           status_options: '--untracked-files=no'
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            branch: ${{ github.ref }}
