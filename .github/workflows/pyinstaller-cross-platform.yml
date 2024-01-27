@@ -188,7 +188,7 @@ jobs:
           tag_name: ${{ needs.envs.outputs.tag }}
           body: |
             Pellipop release for commit ${{ github.sha }}
-          draft: ${{ needs.envs.outputs.tag != 'latest' }} # only draft prereleases
-          prerelease: ${{ needs.envs.outputs.tag != 'latest' }} # prerelease when no version in commit tag
+          draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
+          prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
           files: |
             ./dist/*
