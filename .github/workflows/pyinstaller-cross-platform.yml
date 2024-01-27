@@ -28,6 +28,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+
+
       - name: Set env
         id: set-env
         run: |
@@ -109,6 +111,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create short os name
+        id: os
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            OS=mac
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            OS=linux
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            OS=win
+          fi
+            echo "OS=$OS" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -137,26 +151,14 @@ jobs:
 
           pyinstaller pellipop/gui.py \
           --onefile \
-          --name=pellipop \
+          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
           --hidden-import='PIL._tkinter_finder' \
           --windowed 
-
-      - name: Create short os name
-        id: os
-        run: |
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            OS=mac
-          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            OS=linux
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            OS=win
-          fi
-            echo "OS=$OS" >> $GITHUB_ENV
 
         #      - name: Fake build
         #        run: |
         #          mkdir -p ./dist
-        #          echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ matrix.os }}-${{ needs.envs.outputs.ver }}
+        #          echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
 
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
@@ -164,7 +166,6 @@ jobs:
           name: pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
           path: ./dist/pellipop*
           if-no-files-found: error
-
 
   release:
     if: '!cancelled()'
