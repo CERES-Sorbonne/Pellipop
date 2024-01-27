@@ -170,6 +170,9 @@ jobs:
 
       - name: release
         uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ github.actor }}
         with:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: ${{ needs.envs.outputs.tag }}
