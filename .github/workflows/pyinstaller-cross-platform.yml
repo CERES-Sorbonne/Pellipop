@@ -59,7 +59,11 @@ jobs:
         run: |
           curl_res=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/liudonghua123/pellipop/releases/tags/${{ needs.envs.outputs.date }})
           echo $curl_res
-          echo "delete=[$curl_res -ed 200)" >> $GITHUB_ENV
+          if [[ $curl_res -eq 200 ]]; then
+              echo "delete=true" >> $GITHUB_ENV
+          else
+              echo "delete=false" >> $GITHUB_ENV
+          fi
 
       - name: Delete release
         uses: dev-drprasad/delete-tag-and-release@v1.0
