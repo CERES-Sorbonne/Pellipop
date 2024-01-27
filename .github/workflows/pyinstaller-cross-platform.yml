@@ -29,7 +29,7 @@ jobs:
       - name: Set env
         id: set-env
         run: |
-          if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
+          if [[ "${{ github.event_name }}" == "push" ]]; then
             echo "REF=${{ github.ref }}" >> $GITHUB_ENV
             echo "TAG=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
             echo "VER=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
@@ -179,3 +179,7 @@ jobs:
           prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
           files: |
             ./dist/*
+          target_commitish: ${{ github.sha }}
+          fail_on_unmatched_files: true
+
+
