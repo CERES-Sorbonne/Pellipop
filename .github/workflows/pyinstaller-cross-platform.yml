@@ -56,9 +56,7 @@ jobs:
         id: decode_ref
         run: |
           name=${{ needs.get-ref.outputs.branch-name }}
-          echo "Encoded ref is $name"
           name=$(echo $name | base64 -d)
-          echo "Decoded ref is $name"
           echo "NAME=$name" >> $GITHUB_ENV
 
       - name: Checkout repository
@@ -143,9 +141,7 @@ jobs:
         id: decode_ref
         run: |
           name=${{ needs.envs.outputs.ref }}
-          echo "Encoded ref is $name"
           name=$(echo $name | base64 -d)
-          echo "Decoded ref is $name"
           echo "REF=$name" >> $GITHUB_ENV
 
       - name: Checkout repository
