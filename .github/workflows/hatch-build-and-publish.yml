@@ -15,6 +15,24 @@ permissions:
   id-token: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.check_step.outputs.branch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get current branch
+        id: check_step
+        run: |
+          raw=$(git branch -r --contains ${{ github.ref }})
+          branch=${raw##*/}
+          echo "{name}=branch" >> $GITHUB_OUTPUT
+          echo "Branch is $branch."
+
   deploy:
     runs-on: ubuntu-latest
     environment: release
