@@ -15,20 +15,48 @@ permissions:
   id-token: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current branch
+        id: check_step
+        run: |
+          raw=$(git branch -r --contains ${{ github.ref }})
+          if [[ -z "$raw" ]]; then
+            raw=$(git branch -r --contains ${{ github.sha }})
+          fi
+          if [[ -z "$raw" ]]; then
+            echo "No branch found for ${{ github.ref }} or ${{ github.sha }}."
+            echo "This is probably a tag push without a branch."
+            exit 1
+          fi
+          BRANCH=${raw##*/}
+          BRANCH=$(echo $BRANCH | base64 -w 0)
+          echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
+          echo "Branch is $BRANCH."
+    outputs:
+      branch-name: ${{ steps.check_step.outputs.BRANCH }}
+
+
   deploy:
     runs-on: ubuntu-latest
     environment: release
+    needs: check
     steps:
-      - uses: nelonoel/branch-name@v1.0.1
-
-      - name: Which ref
-        id: branch-name
+      - name: Decode ref
+        id: decode_ref
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "REF=master" >> $GITHUB_ENV
-          else
-              echo "REF=${{ steps.branch-name.outputs.branch-name }}" >> $GITHUB_ENV
-            fi
+          name=${{ needs.check.outputs.branch-name }}
+          echo "Encoded ref is $name"
+          name=$(echo $name | base64 -d)
+          echo "Decoded ref is $name"
+          echo "REF=$name" >> $GITHUB_ENV
 
       - name: Checkout repository
         uses: actions/checkout@v4
