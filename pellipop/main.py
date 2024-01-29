@@ -1,237 +1,306 @@
+import json
+from pathlib import Path
 from threading import Thread
+from typing import Optional
 
 import cv2
-import os
-from pathlib import Path
-# from datetime import time
-
 from PIL import Image
 from imagehash import average_hash
-import argparse
-# from moviepy.editor import VideoFileClip
 from tqdm.auto import tqdm
 
+from pellipop.fileFinder import file_finder, how_many_files
 from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 
-extensions = (".mov", ".avi", ".mp4", ".flv", ".wmv", ".webm", ".mkv", ".svf")
+default_output_path = f'{Path.home() / "Documents" / "Pellipop"}/'
 
-def delete_duplicates(input_path):
-    all_hashs = set()
-    to_delete = []
-    for image in input_path.glob("*"):
-        # path = os.path.join(input_path, image)
-        img = Image.open(image)
-        ahash = average_hash(img)
-        if ahash in all_hashs:
-            to_delete.append(image)
-        else:
-            all_hashs.add(ahash)
-    for path in to_delete:
-        # os.remove(path)
-        path.unlink()
-    print(f"Suppression de {len(to_delete)} doublons !")
 
-def format_time(frame: int, fps: int) -> str:
-    ## Non optimisé
-    # duree = int(frame / fps)
-    # heures, reste = divmod(duree, 3600)
-    # minutes, secondes = divmod(reste, 60)
-    # return time(heures, minutes, secondes).strftime("%Hh_%Mm_%Ss.jpg")
-    ## Optimisé
-    heures, reste = divmod(frame, 3600 * fps)
-    minutes, secondes = divmod(reste, 60)
-    return f'{heures:02d}h_{minutes:02d}m_{secondes:02d}s.jpg'
+class Pellipop:
+    default_whisper_config = Path.home() / ".whisperrc"
+    video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
 
-def save_frame_range_sec(video_path, step_sec, output_folder):
-    video = cv2.VideoCapture(video_path.__str__())
+    def __init__(
+            self,
+            *args,
+            intervale: float,
+            input_folder: str | Path,
+            output_folder: str | Path = Path.home() / "Documents" / "Pellipop",
+            delete_duplicates: bool = False,
+            decouper: bool = False,
+            retranscrire: bool = False,
+            csv: bool = False,
+            only_text: bool = False,
 
-    if not video.isOpened():
-        print(f"impossible de lire {video_path}")
-        return
-        
-    fps = video.get(5)  # CAP_PROP_FPS
-    frame_count = video.get(7)  # CAP_PROP_FRAME_COUNT
+            on_progress: callable = None,
 
-    frame_count = int(frame_count)
-    fps = int(fps)
+            whisper_config: dict = None,
+            keep_audio: bool = False,
+    ):
+        if args:
+            raise
 
-    freq = step_sec / fps
+        self.t1 = None
+        self.t2 = None
 
-    pbar = tqdm(
-        range(0, frame_count, int(fps / freq)),
-        desc=f"Etat d'avancement de : {video_path.name}",
-        unit="frame",
-        leave=False
-    )
+        self.intervale = intervale if intervale else 1
+        self.input_folder = input_folder
+        self.output_folder = output_folder
+        self.delete_duplicates = delete_duplicates
+        self.decouper = decouper
+        self.retranscrire = retranscrire
+        self.csv = csv
+        self.only_text = only_text
 
-    # with tqdm(total=round(duree / step_sec), desc=f"Etat d'avancement de : {video_path}") as bar:
-    for i in pbar:
-        video.set(1, i) # CAP_PROP_POS_FRAMES
+        self.whisper_config = whisper_config
+        self.keep_audio = keep_audio
 
-        ret, frame = video.read()
-        # file_name = os.path.join(output_folder, format_time(n, fps_inv))
-        file_name = output_folder / format_time(i, fps)
-        if ret:  #  is True différent de == True >
-            if not cv2.imwrite(str(file_name), frame):
-                print("error saving image")
-        else:
-            break
+        self.completed = False
+        self.outputs: dict[str, Optional[Path]] = {
+            "audio": None,
+            "text": None,
+            "image": None,
+            "csv": None,
+        }
 
-    video.release()
+        self.fichiers = list(file_finder(self.input_folder))
+        self.hm = len(self.fichiers)
 
-def main(intervalle_de_temps=5, input_folder=None, output_folder=None, remove_duplicates=False):
-    #Inscription des vidéos à traiter dans une liste
-    # fichiers = [os.path.join(input_folder, f) for f in os.listdir(input_folder) if f.endswith(tuple(extensions))]
-    fichiers = input_folder.glob("*")
-    fichiers = [f for f in fichiers if f.suffix in extensions]
+    def launch(self) -> Optional[Path]:
+        exec_dir = Path(__file__).parent
+        print(exec_dir)
 
-    #Affichage des informations à l'utilisateur-trice
-    print("\n*** Liste des vidéos à découper : ***\n")
-    print([f.name for f in fichiers])
-    print(f"\nVous souhaitez découper {len(fichiers)} vidéos. Chaque vidéo va être découpée en images fixes séparées \
-    les unes des autres de {intervalle_de_temps} secondes.\n")
+        if not isinstance(self.input_folder, Path):
+            self.input_folder = Path(self.input_folder)
+        if not isinstance(self.output_folder, Path):
+            self.output_folder = Path(self.output_folder)
 
-    #Programme de découpe
-    for fichier in tqdm(fichiers, desc="Nombre de vidéos traitées"):
-        # duree = int(VideoFileClip(str(fichier)).duration) #calcul la durée de la vidéo pour la gestion de l'affichage de l'avancement du traitement pour chaque vidéo.
-        
-        # output_path = os.path.join(output_folder, "output_pellipop", os.path.basename(fichier).split('.')[0].strip().replace(' ', '_'))
-        output_path = output_folder / "output_pellipop" / f"{fichier.stem.replace(' ', '_')}"
-        # os.makedirs(output_path, exist_ok=True)
+        if not self.input_folder.exists():
+            raise FileNotFoundError("Le dossier d'entrée n'existe pas")
+        if not self.input_folder.is_dir():
+            raise NotADirectoryError("Le chemin d'entrée n'est pas un dossier")
+        if not self.output_folder.exists():
+            print("Le dossier de sortie n'existe pas, il sera créé")
+            self.output_folder.mkdir(parents=True)
+        if self.output_folder.is_file():
+            raise NotADirectoryError("Le chemin de sortie est un fichier")
+
+        if self.retranscrire:
+            if self.whisper_config is None:
+                self.whisper_config = exec_dir / "whisper_config.json"
+            else:
+                self.whisper_config = Path(self.whisper_config)
+
+            if not self.whisper_config.exists():
+                print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
+                self.whisper_config = None
+
+            if self.decouper:
+                self.t1 = Thread(target=self.extract_audio_then_text)
+                self.t1.start()
+            else:
+                self.extract_audio_then_text()  # (input_folder, output_folder, audio, whisper_config)
+
+        if self.decouper:
+            if self.retranscrire:
+                self.t2 = Thread(target=self.decouper_video)
+                self.t2.start()
+
+            else:
+                self.decouper_video()  # (freq, input_folder, output_folder, delete_duplicates)
+
+        # Wait for threads to finish (needed for the csv creation and the only_text conversion to work)
+        if self.t1 is not None:
+            self.t1.join()
+        if self.t2 is not None:
+            self.t2.join()
+
+        if self.csv:
+            print("Création du fichier CSV")
+            self.create_csv()
+
+        if self.only_text:
+            self._only_text()
+
+        self.completed = True
+
+        return self.outputs["csv"]
+
+    @staticmethod
+    def del_duplicates(input_path: str | Path) -> None:
+        if isinstance(input_path, str):
+            input_path = Path(input_path)
+        elif not isinstance(input_path, Path):
+            raise TypeError("Le chemin d'entrée doit être un str ou un Path")
+
+        all_hashs = set()
+        to_delete = []
+
+        for image in input_path.glob("*"):
+            img = Image.open(image)
+            ahash = average_hash(img)
+            if ahash in all_hashs:
+                to_delete.append(image)
+            else:
+                all_hashs.add(ahash)
+        for path in to_delete:
+            path.unlink()
+        print(f"Suppression de {len(to_delete)} doublons !")
+
+    @staticmethod
+    def duplicateless_folder_seq(input_path: str | Path, output_path: str | Path) -> None:
+        if isinstance(input_path, str):
+            input_path = Path(input_path)
+        elif not isinstance(input_path, Path):
+            raise TypeError("Le chemin d'entrée doit être un str ou un Path")
+
+        if isinstance(output_path, str):
+            output_path = Path(output_path)
+        elif not isinstance(output_path, Path):
+            raise TypeError("Le chemin de sortie doit être un str ou un Path")
+
         output_path.mkdir(parents=True, exist_ok=True)
-        
-        save_frame_range_sec(fichier, intervalle_de_temps, output_path)
 
-        if remove_duplicates:
-            delete_duplicates(output_path)
+        actual_hash = None
 
-    #Note : la valeur 500 (minutes)*60 (pour passer en secondes) est une valeur aléatoire, l'idée est juste de donnée une longueur max de film au-delà de laquelle on ne regarde pas. Mais si le film est plus court ça ne semble pas poser de soucis.
+        for image in tqdm(input_path.glob("*")):
+            img = Image.open(image)
+            ahash = average_hash(img)
+            if ahash != actual_hash:
+                actual_hash = ahash
+                img.save(output_path / image.name)
 
-    print("Découpe des vidéos en images terminée !")
+    @staticmethod
+    def format_time(frame: int, fps: int) -> str:
+        heures, reste = divmod(frame // fps, 3600)
+        minutes, secondes = divmod(reste, 60)
+        return f'{heures:02d}h_{minutes:02d}m_{secondes:02d}s.jpg'
 
-def extract_audio_then_text(
-        input_folder,
-        output_folder,
-        keep_audio=False,
-        whisper_config=None,
-        whisper_mode="full",
-        whisper_timestamped=False,
-        # whisper_output=None
-):
-    output_folder_audio = output_folder / "output_audio"
-    output_folder_audio.mkdir(parents=True, exist_ok=True)
+    @staticmethod
+    def format_fime_span(start: str, end: str) -> str:
+        return f"{start}TO{end}.jpg"
 
-    output_folder_text = output_folder / "output_text"
-    output_folder_text.mkdir(exist_ok=True)
+    def save_frame_range_sec(self, video_path, output_folder):
+        video = cv2.VideoCapture(video_path.__str__())
 
-    extractAudio.toAudioFolder(input_folder, output_folder_audio)
-    print("Extraction des fichiers audio terminée !")
+        if not video.isOpened():
+            print(f"impossible de lire {video_path}")
+            return
 
-    if whisper_config is not None:
-        try:
-            whisperMode.main(
-                whisper_config,
-                output_folder_audio,
-                output_folder_text,
-                mode=whisper_mode,
-                folder=True,
-                timestamped=whisper_timestamped,
-            )
-        except Exception as e:
-            print(e)
-            print("Erreur lors de l'extraction du texte avec Whisper")
-            extractText.toTextFolder(output_folder_audio, output_folder_text)
-    else:
-        extractText.toTextFolder(output_folder_audio, output_folder_text)
+        fps = int(video.get(5))  # CAP_PROP_FPS
+        frame_count = int(video.get(7))  # CAP_PROP_FRAME_COUNT
 
-    if not keep_audio:
-        for audio in output_folder_audio.glob("*"):
-            audio.unlink()
-        output_folder_audio.rmdir()
+        freq = fps * self.intervale
 
-    print("Extraction du texte terminée !")
+        print()
+        print(f"fps : {fps}")
+        print(f"frame_count : {frame_count}")
+        print(f"image par seconde : {self.intervale}")
+        print(f"freq : {freq}")
 
+        pbar = tqdm(
+            range(0, frame_count, int(freq)),
+            desc=f"Etat d'avancement de : {video_path.name}",
+            unit="frame",
+            leave=False
+        )
 
-def pied(
-        intervalle_de_temps=5,
-        input_folder=None,
-        output_folder=None,
-        remove_duplicates=False,
-        keep_audio=False,
-        whisper_config=None,
-        whisper_mode="full",
-        whisper_timestamped=False,
-        decouper=True,
-        retranscrire=False,
-        csv=False,
-        # whisper_output=None
-):
-    exec_dir = Path(__file__).parent
-    print(exec_dir)
+        for i in pbar:
+            video.set(1, i)  # CAP_PROP_POS_FRAMES
 
-    if not isinstance(input_folder, Path):
-        input_folder = Path(input_folder)
+            ret, frame = video.read()
+            file_name = output_folder / self.format_time(i, fps)
+            if ret:
+                if not cv2.imwrite(str(file_name), frame):
+                    print("error saving image")
+            else:
+                break
 
-    if not isinstance(output_folder, Path):
-        output_folder = Path(output_folder)
+        video.release()
 
-    if not input_folder.exists():
-        raise FileNotFoundError("Le dossier d'entrée n'existe pas")
+    def decouper_video(self) -> Optional[Path]:
+        print("Découpage des vidéos")
+        self.outputs["video"] = self.output_folder / "video"
 
-    if not frames_only:
-        if whisper_config is None:
-            whisper_config = exec_dir / "whisper_config.json"
+        for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
+            output_folder = self.outputs["video"] / fichier.stem.replace(' ', '_')
+            output_folder.mkdir(parents=True, exist_ok=True)
+
+            self.save_frame_range_sec(fichier, output_folder)
+
+            if self.delete_duplicates:
+                self.del_duplicates(output_folder)
+
+        print("Découpage terminé !")
+        return self.outputs["video"]
+
+    def extract_audio_then_text(self) -> Optional[Path]:
+
+        self.outputs["audio"] = self.output_folder / "audio"
+        self.outputs["audio"].mkdir(parents=True, exist_ok=True)
+        self.outputs["text"] = self.output_folder / "text"
+        self.outputs["text"].mkdir(parents=True, exist_ok=True)
+
+        print("Extraction de l'audio")
+
+        extractAudio.toAudioFolder(self.input_folder, self.outputs["audio"])
+
+        print("Extraction de l'audio terminée !")
+
+        print("Extraction du texte")
+        if self.whisper_config is not None or self.default_whisper_config.exists():
+            try:
+                whisperMode.main(
+                    self.whisper_config or self.default_whisper_config,
+                    self.outputs["audio"],
+                    self.outputs["text"],
+                    mode="full",
+                    folder=True,
+                )
+            except Exception as e:
+                print(e)
+                print("Erreur lors de l'extraction du texte avec Whisper")
+                extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
+
         else:
-            whisper_config = Path(whisper_config)
+            print("Aucun fichier de configuration Whisper passé en argument, "
+                  "extraction du texte avec Google Speech-to-Text")
+            extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
 
-        if not whisper_config.exists():
-            print("Le fichier de configuration de l'API Whisper n'a pas été trouvé")
-            whisper_config = None
+        print("Extraction du texte terminée !")
 
-        if decouper:
-            t1 = Thread(target=extract_audio_then_text, args=(input_folder, output_folder, keep_audio, whisper_config, whisper_mode))
-            t1.start()
+        if not self.keep_audio:
+            for audio in self.outputs["audio"].glob("*"):
+                audio.unlink()
+            self.outputs["audio"].rmdir()
         else:
-            extract_audio_then_text(input_folder, output_folder, keep_audio, whisper_config, whisper_mode, whisper_timestamped)
+            self.outputs["audio"] = None
 
-    if decouper:
-        if retranscrire:
-            t2 = Thread(target=main, args=(intervalle_de_temps, input_folder, output_folder, remove_duplicates))
-            t2.start()
+        return self.outputs["text"]
 
-        else:
-            main(intervalle_de_temps, input_folder, output_folder, remove_duplicates)
+    def _only_text(self):
+        """Go from json to txt"""
+        if not self.outputs["text"]:
+            return
+        if not self.outputs["text"].exists():
+            raise FileNotFoundError("Le dossier de sortie n'existe pas")
+        if not self.outputs["text"].is_dir():
+            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
 
-    if csv:
-        print("Création du fichier CSV")
+        jsons = list(file_finder(self.outputs["text"], format="json"))
 
+        for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
+            with json_file.open(mode="r", encoding="utf-8") as f:
+                data = json.load(f)
 
+            with json_file.with_suffix(".txt").open(mode="w", encoding="utf-8") as f:
+                f.write(data["text"])
 
-def start():
-    #Possibilité de paramétrage dans le terminal/l'invite de commandes
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str, help="Dossier racine contenant les vidéos", default=os.getcwd())
-    parser.add_argument("--frequency", type=int, help="Définition de l'intervalle de temps (en secondes) à laquelle réaliser des captures d'écran. Il faut simplement indiqué une valeur numérique.", default=5)
-    parser.add_argument("--output", type=str, help="Dossier de sortie pour les images extraites", default=os.getcwd())
-    parser.add_argument("--remove_duplicates", type=bool, help="Permet de supprimer les doublons d'images pour un même film en utilisant l'algorithme average hash", default=False, nargs='?', const=True)
-    parser.add_argument("--keep_audio", type=bool, help="Permet de garder les fichiers audio extraits des vidéos", default=False, nargs='?', const=True)
-    parser.add_argument("--whisper-config", type=str, help="Chemin vers le fichier de configuration de l'API Whisper", default=os.path.join(os.getcwd(), "whisper_config.json"))
-    parser.add_argument("--whisper-mode", type=str, help="Mode de l'API Whisper", default="full")
-    parser.add_argument("--frames-only", type=bool, help="Permet de ne pas extraire le texte des vidéos", default=False, nargs='?', const=True)
-    # parser.add_argument("--whisper-output", type=str, help="Dossier de sortie pour les fichiers de l'API Whisper", default=os.path.join(os.getcwd(), "output_whisper"))
-    args = parser.parse_args()
+            json_file.unlink()
 
-    pied(
-        input_folder=args.input,
-        intervalle_de_temps=args.frequency,
-        output_folder=args.output,
-        remove_duplicates=args.remove_duplicates,
-        keep_audio=args.keep_audio,
-        whisper_config=args.whisper_config,
-        whisper_mode=args.whisper_mode,
-        frames_only=args.frames_only,
-        # whisper_output=args.whisper_output
-    )
+    def create_csv(self):
+        pass
+
 
 if __name__ == "__main__":
-    start()
+    testdir = "/home/marceau/PycharmProjects/Pellipop/"
+
+    print(how_many_files(testdir))

@@ -1,0 +1,190 @@
+name: Cross-platform executable
+run-name: PyInstaller by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+      - 'v*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+defaults:
+  run:
+    shell: bash # Use bash shell for every os
+
+jobs:
+  envs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set env
+        id: set-env
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "REF=${{ github.ref }}" >> $GITHUB_ENV
+            echo "TAG=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
+            echo "VER=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
+          else
+              echo "REF=${{ github.ref }}" >> $GITHUB_ENV
+              echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+              echo "TAG=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          fi
+          echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+    #     echo $VER
+    #     echo $TAG
+    #     echo $REF
+    #     echo $DATE
+
+    outputs:
+      ver: ${{ env.VER }}
+      tag: ${{ env.TAG }}
+      ref: ${{ env.REF }}
+      date: ${{ env.DATE }}
+
+  delete-if-exists:
+    runs-on: ubuntu-latest
+    needs:
+      - envs
+    steps:
+      - name: Delete
+        run: |
+          curl_res=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/liudonghua123/pellipop/releases/tags/${{ needs.envs.outputs.date }})
+          echo $curl_res
+          if [[ $curl_res -eq 200 ]]; then
+              echo "delete=true" >> $GITHUB_ENV
+          else
+              echo "delete=false" >> $GITHUB_ENV
+          fi
+
+      - name: Delete release
+        uses: dev-drprasad/delete-tag-and-release@v1.0
+        with:
+          tag_name: ${{ needs.envs.outputs.tag }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          delete_release: ${{ env.delete }}
+
+
+  check:
+    runs-on: ubuntu-latest
+    needs:
+      - envs
+    steps:
+      - name: Verify
+        run: |
+          echo "VER=${{ needs.envs.outputs.ver }}"
+          echo "TAG=${{ needs.envs.outputs.tag }}"
+          echo "REF=${{ needs.envs.outputs.ref }}"
+  
+
+  build:
+    name: Build release binaries
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    needs:
+      - envs
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create short os name
+        id: os
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            OS=mac
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            OS=linux
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            OS=win
+          fi
+            echo "OS=$OS" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Install pellipop
+        run: |
+          pip install .
+
+      - name: Fix linux msgcat
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install gettext
+          sudo ln -s /usr/bin/msgcat /usr/local/bin/msgcat
+          cp ./linux-fix/msgcat.py /opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/ttkbootstrap/localization/msgcat.py 
+
+      - name: Build with pyinstaller
+        run: |
+          ls pellipop
+
+          pyinstaller pellipop/gui.py \
+          --onefile \
+          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
+          --hidden-import='PIL._tkinter_finder' \
+          --windowed 
+
+        #- name: Fake build
+        #  run: |
+        #mkdir -p ./dist
+        #echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
+
+      - name: Deploy artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
+          path: ./dist/pellipop*
+          if-no-files-found: error
+
+
+  release:
+    if: '!cancelled()'
+    needs:
+      - build
+      - envs
+    name: Release binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: ./dist
+
+      - name: release # TODO: Put user in release ?
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ needs.envs.outputs.ver }}
+          tag_name: ${{ needs.envs.outputs.tag }}
+          body: |
+            Pellipop release for commit ${{ github.sha }}
+          draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
+          prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
+          files: |
+            ./dist/*
+          target_commitish: ${{ github.sha }}
+          fail_on_unmatched_files: true
+
+
