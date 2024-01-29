@@ -8,11 +8,10 @@ from PIL import Image
 from imagehash import average_hash
 from tqdm.auto import tqdm
 
-from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 from pellipop.fileFinder import file_finder, how_many_files
+from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 
 default_output_path = f'{Path.home() / "Documents" / "Pellipop"}/'
-
 
 
 class Pellipop:
@@ -22,7 +21,7 @@ class Pellipop:
     def __init__(
             self,
             *args,
-            freq: float,
+            intervale: float,
             input_folder: str | Path,
             output_folder: str | Path = Path.home() / "Documents" / "Pellipop",
             delete_duplicates: bool = False,
@@ -42,7 +41,7 @@ class Pellipop:
         self.t1 = None
         self.t2 = None
 
-        self.freq = freq
+        self.intervale = intervale if intervale else 1
         self.input_folder = input_folder
         self.output_folder = output_folder
         self.delete_duplicates = delete_duplicates
@@ -50,7 +49,6 @@ class Pellipop:
         self.retranscrire = retranscrire
         self.csv = csv
         self.only_text = only_text
-
 
         self.whisper_config = whisper_config
         self.keep_audio = keep_audio
@@ -172,7 +170,7 @@ class Pellipop:
 
     @staticmethod
     def format_time(frame: int, fps: int) -> str:
-        heures, reste = divmod(frame, 3600 * fps)
+        heures, reste = divmod(frame // fps, 3600)
         minutes, secondes = divmod(reste, 60)
         return f'{heures:02d}h_{minutes:02d}m_{secondes:02d}s.jpg'
 
@@ -180,8 +178,7 @@ class Pellipop:
     def format_fime_span(start: str, end: str) -> str:
         return f"{start}TO{end}.jpg"
 
-    @staticmethod
-    def save_frame_range_sec(video_path, step_sec, output_folder):
+    def save_frame_range_sec(self, video_path, output_folder):
         video = cv2.VideoCapture(video_path.__str__())
 
         if not video.isOpened():
@@ -191,10 +188,16 @@ class Pellipop:
         fps = int(video.get(5))  # CAP_PROP_FPS
         frame_count = int(video.get(7))  # CAP_PROP_FRAME_COUNT
 
-        freq = step_sec / fps
+        freq = fps * self.intervale
+
+        print()
+        print(f"fps : {fps}")
+        print(f"frame_count : {frame_count}")
+        print(f"image par seconde : {self.intervale}")
+        print(f"freq : {freq}")
 
         pbar = tqdm(
-            range(0, frame_count, int(fps / freq)),
+            range(0, frame_count, int(freq)),
             desc=f"Etat d'avancement de : {video_path.name}",
             unit="frame",
             leave=False
@@ -204,7 +207,7 @@ class Pellipop:
             video.set(1, i)  # CAP_PROP_POS_FRAMES
 
             ret, frame = video.read()
-            file_name = output_folder / Pellipop.format_time(i, fps)
+            file_name = output_folder / self.format_time(i, fps)
             if ret:
                 if not cv2.imwrite(str(file_name), frame):
                     print("error saving image")
@@ -217,11 +220,11 @@ class Pellipop:
         print("Découpage des vidéos")
         self.outputs["video"] = self.output_folder / "video"
 
-        for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit="video", total=self.hm):
+        for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
             output_folder = self.outputs["video"] / fichier.stem.replace(' ', '_')
             output_folder.mkdir(parents=True, exist_ok=True)
 
-            self.save_frame_range_sec(fichier, self.freq, output_folder)
+            self.save_frame_range_sec(fichier, output_folder)
 
             if self.delete_duplicates:
                 self.del_duplicates(output_folder)
@@ -272,7 +275,6 @@ class Pellipop:
             self.outputs["audio"] = None
 
         return self.outputs["text"]
-
 
     def _only_text(self):
         """Go from json to txt"""

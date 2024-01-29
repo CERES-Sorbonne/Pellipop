@@ -48,7 +48,7 @@ def main(args=args):
         return
 
     pellipop = Pellipop(
-        freq=args.frequency,
+        intervale=args.frequency,
         input_folder=args.input,
         output_folder=args.output,
         delete_duplicates=args.remove_duplicates,

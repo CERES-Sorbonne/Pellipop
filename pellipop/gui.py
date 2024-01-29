@@ -188,12 +188,12 @@ def lancer():
     if mode.get() == "s":
         freq = int(freq_int.get())
     elif mode.get() == "s-1":
-        freq = 1 / int(freq_int.get())
+        freq = None
     else:
         freq = None
 
     config = {
-        "freq": freq,
+        "intervale": freq,
         "input_folder": input_folder.get(),
         "output_folder": output_folder.get(),
         "delete_duplicates": mode.get() == "i",
@@ -297,21 +297,21 @@ left_lv2_frame.pack()
 freq_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 freq_frame.grid(row=2, column=0)
 ttk.Label(freq_frame, text='Fréquence de découpage').grid(row=0, column=0, columnspan=6, pady=10)
-mode = tk.StringVar(value="s-1")
-ttk.Radiobutton(
-    freq_frame,
-    text="par seconde",
-    variable=mode,
-    value="s-1",
-    command=disable_freq
-).grid(row=1, column=0, columnspan=3, pady=10, padx=5)
+mode = tk.StringVar(value="s")
+# ttk.Radiobutton(
+#     freq_frame,
+#     text="par seconde",
+#     variable=mode,
+#     value="s-1",
+#     command=disable_freq
+# ).grid(row=1, column=0, columnspan=3, pady=10, padx=5)
 ttk.Radiobutton(
     freq_frame,
     text="toutes les x secondes",
     variable=mode,
     value="s",
     command=disable_freq,
-).grid(row=1, column=3, columnspan=3, pady=10, padx=5)
+).grid(row=1, column=0, columnspan=6, pady=10, padx=5)
 ttk.Radiobutton(
     freq_frame,
     text="Découpage intelligent (par plan)",
