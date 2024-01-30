@@ -237,6 +237,13 @@ jobs:
 #          ${{ env.UPX_PATH }} ./dist/pellipop* # upx only available on Windows for now
 #          du -sh ./dist/pellipop*
 
+      - name: Macos app
+        if : matrix.os == 'macos-latest' || matrix.os == 'macos-14'
+        run: |
+          tar -czvf ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.tar.gz ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.app        
+          du -sh ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.tar.gz
+          rm -rf ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.app
+
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
         with:
