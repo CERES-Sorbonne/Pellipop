@@ -222,7 +222,8 @@ jobs:
           --onefile \
           --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
           --hidden-import='PIL._tkinter_finder' \
-          --windowed 
+          --windowed \
+          --hide-console hide-early
 
         #- name: Fake build
         #  run: |
