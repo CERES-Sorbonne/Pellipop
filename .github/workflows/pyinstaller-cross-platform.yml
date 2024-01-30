@@ -77,7 +77,9 @@ jobs:
           fi
           echo "REF=${{ needs.get-ref.outputs.branch-name }}" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-          echo "MESSAGE=$(git show -s --format=%s)" >> $GITHUB_ENV
+          
+          MESSAGE=$(git show -s --format=%s | base64 -w 0)
+          echo "MESSAGE=$MESSAGE" >> $GITHUB_ENV
 
     outputs:
       ver: ${{ env.VER }}
@@ -93,7 +95,7 @@ jobs:
     steps:
       - name: Delete
         run: |
-          curl_res=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/liudonghua123/pellipop/releases/tags/${{ needs.envs.outputs.date }})
+          curl_res=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.envs.outputs.date }})
           echo $curl_res
           if [[ $curl_res -eq 200 ]]; then
               echo "delete=true" >> $GITHUB_ENV
@@ -124,6 +126,12 @@ jobs:
           name=${{ needs.envs.outputs.ref }}
           name=$(echo $name | base64 -d)
           echo "Decoded ref is $name" 
+          
+          MESSAGE=${{ needs.envs.outputs.message }}
+          MESSAGE=$(echo $MESSAGE | base64 -d)
+          echo "Decoded message is $MESSAGE"
+          
+            
   
 
   build:
@@ -257,13 +265,16 @@ jobs:
       - name: Write release text
         id: write_release
         run: |
-            MESSAGE="Pellipop release for commit ${{ github.sha }}\nBy @${{ github.actor }} \n"
+            echo "Pellipop release for commit ${{ github.sha }}"
+            echo "By @${{ github.actor }} \n"
             if [[ "${{ needs.envs.outputs.tag }}" == "latest" ]]; then
-                MESSAGE="$MESSAGE\nManually triggered release for latest commit on branch ${{ needs.envs.outputs.ref }}.\n"
+                echo "Manually triggered release for latest commit on branch ${{ needs.envs.outputs.ref }}."
             else
-                MESSAGE="$MESSAGE\nAuto-generated release for tag ${{ needs.envs.outputs.tag }}.\n"
+                echo "Auto-generated release for tag ${{ needs.envs.outputs.tag }}."
             fi
-            echo -e "MESSAGE=$MESSAGE\nCommit message: `${{ needs.envs.outputs.message }}`." >> $GITHUB_ENV
+            echo "Commit message: \`${{ needs.envs.outputs.message }}\`."
+            echo "Commit date: ${{ needs.envs.outputs.date }}."
+            echo EOF
           
 
       - name: release # TODO: Put user in release ?
@@ -274,7 +285,7 @@ jobs:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: ${{ needs.envs.outputs.tag }}
           body: |
-            ${{ env.MESSAGE }}
+            ${{ steps.write_release.outputs.stdout }}
 
           draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
           prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
