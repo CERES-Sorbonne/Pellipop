@@ -276,7 +276,7 @@ jobs:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: ${{ needs.envs.outputs.tag }}
           body: |
-            {{ env.MESSAGE }}
+            ${{ env.MESSAGE }}
 
           draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
           prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
