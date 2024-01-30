@@ -52,7 +52,13 @@ def url_import():
     import_label["foreground"] = "green"
 
 
-def browse(path_var, default_path=Path.home(), add_suffix=None):
+def browse(
+        path_var,
+        default_path=Path.home(),
+        add_suffix=None,
+        mustexist: bool = False,
+        title: str = "Choisissez un dossier",
+):
     path = path_var.get()
 
     if path == "Entrez le chemin du dossier à analyser":
@@ -68,7 +74,8 @@ def browse(path_var, default_path=Path.home(), add_suffix=None):
 
     path = filedialog.askdirectory(
         initialdir=path,
-        title="Select a folder",
+        title=title,
+        mustexist=mustexist,
     )
 
     if not path:
@@ -87,7 +94,7 @@ def browse(path_var, default_path=Path.home(), add_suffix=None):
 
 
 def browse_input():
-    path = browse(input_folder)
+    path = browse(input_folder, mustexist=True, title="Choisissez le dossier à analyser")
 
     if not path:
         return
@@ -96,7 +103,12 @@ def browse_input():
 
 
 def browse_output():
-    browse(output_folder, default_path=Path().cwd(), add_suffix="pellipop_output")
+    browse(
+        output_folder,
+        default_path=Path().cwd(),
+        add_suffix="pellipop_output",
+        title="Choisissez le dossier de sortie"
+    )
 
 
 def validatepositiveint(var):
