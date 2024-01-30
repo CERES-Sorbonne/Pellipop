@@ -225,8 +225,8 @@ jobs:
           ls ./dist/pellipop*
           file ./dist/pellipop*
           du -sh ./dist/pellipop*
-          ${{ env.UPX_PATH }} ./dist/pellipop*
-          du -sh ./dist/pellipop*
+#          ${{ env.UPX_PATH }} ./dist/pellipop* # upx only available on Windows for now
+#          du -sh ./dist/pellipop*
 
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
