@@ -226,8 +226,7 @@ jobs:
         run: |
           ls pellipop # Debug purposes
 
-          pyinstaller \ 
-          pellipop/gui.py \ # Main file
+          pyinstaller pellipop/gui.py \ # Main file
           --onefile \ # One file -> a unique executable
           --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \ # Name of the executable
           --hidden-import='PIL._tkinter_finder' \ # PIL is used by ttkbootstrap
