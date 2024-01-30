@@ -224,7 +224,6 @@ jobs:
       - name: Check build
         run: |
           ls ./dist
-          ls ./dist/pellipop*
           file ./dist/pellipop*
           du -sh ./dist/pellipop*
 #          ${{ env.UPX_PATH }} ./dist/pellipop* # upx only available on Windows for now
@@ -258,14 +257,13 @@ jobs:
       - name: Write release text
         id: write_release
         run: |
-            echo "MESSAGE=Pellipop release for commit ${{ github.sha }} \n \
-            By @${{ github.actor }} \n"
+            MESSAGE="Pellipop release for commit ${{ github.sha }}\nBy @${{ github.actor }} \n"
             if [[ "${{ needs.envs.outputs.tag }}" == "latest" ]]; then
-                echo "MESSAGE=$MESSAGE\nManually triggered release for latest commit on branch ${{ needs.envs.outputs.ref }}.\n"
+                MESSAGE="$MESSAGE\nManually triggered release for latest commit on branch ${{ needs.envs.outputs.ref }}.\n"
             else
-                echo "MESSAGE=$MESSAGE\nAuto-generated release for tag ${{ needs.envs.outputs.tag }}.\n"
+                MESSAGE="$MESSAGE\nAuto-generated release for tag ${{ needs.envs.outputs.tag }}.\n"
             fi
-            echo "MESSAGE=$MESSAGE\nCommit message: ${{ needs.envs.outputs.message }}.\n" >> $GITHUB_ENV
+            echo -e "MESSAGE=$MESSAGE\nCommit message: `${{ needs.envs.outputs.message }}`." >> $GITHUB_ENV
           
 
       - name: release # TODO: Put user in release ?
