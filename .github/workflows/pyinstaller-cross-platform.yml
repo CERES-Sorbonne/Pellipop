@@ -277,7 +277,13 @@ jobs:
           path: ./dist
 
       - name: Display structure of downloaded files
-        run: ls -R
+        run: |
+          list=$(ls -R ./dist)
+          echo $list
+          if [[ $list -eq "" ]]; then
+              echo "No files found in ./dist"
+              exit 1
+          fi
 
       - name: Write release text
         id: write_release
