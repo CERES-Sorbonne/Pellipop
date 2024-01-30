@@ -265,16 +265,15 @@ jobs:
       - name: Write release text
         id: write_release
         run: |
-            echo "Pellipop release for commit ${{ github.sha }}"
-            echo "By @${{ github.actor }} \n"
+            echo "Pellipop release for commit ${{ github.sha }}" > release.md
+            echo "By @${{ github.actor }}" >> release.md
             if [[ "${{ needs.envs.outputs.tag }}" == "latest" ]]; then
-                echo "Manually triggered release for latest commit on branch ${{ needs.envs.outputs.ref }}."
+                echo "Manually triggered release for latest commit on branch ${{ needs.envs.outputs.ref }}." >> release.md
             else
-                echo "Auto-generated release for tag ${{ needs.envs.outputs.tag }}."
+                echo "Auto-generated release for tag ${{ needs.envs.outputs.tag }}." >> release.md
             fi
-            echo "Commit message: \`${{ needs.envs.outputs.message }}\`."
-            echo "Commit date: ${{ needs.envs.outputs.date }}."
-            echo EOF
+            echo "Commit message: \`${{ needs.envs.outputs.message }}\`." >> release.md
+            echo "Commit date: ${{ needs.envs.outputs.date }}." >> release.md
           
 
       - name: release # TODO: Put user in release ?
@@ -284,9 +283,7 @@ jobs:
         with:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: ${{ needs.envs.outputs.tag }}
-          body: |
-            ${{ steps.write_release.outputs.stdout }}
-
+          body_path: release.md
           draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
           prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
           files: |
