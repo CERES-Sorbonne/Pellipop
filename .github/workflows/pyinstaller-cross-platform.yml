@@ -272,7 +272,9 @@ jobs:
             else
                 echo "Auto-generated release for tag ${{ needs.envs.outputs.tag }}." >> release.md
             fi
-            echo "Commit message: \`${{ needs.envs.outputs.message }}\`." >> release.md
+            message=${{ needs.envs.outputs.message }}
+            message=$(echo $message | base64 -d)
+            echo "Commit message: \`$message\`." >> release.md
             echo "Commit date: ${{ needs.envs.outputs.date }}." >> release.md
           
 
