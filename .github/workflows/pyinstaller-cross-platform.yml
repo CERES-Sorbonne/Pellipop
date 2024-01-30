@@ -38,7 +38,7 @@ jobs:
           fi
           if [[ -z "$raw" ]]; then
             echo "No branch found for ${{ github.ref }} or ${{ github.sha }}."
-            echo "This is probably a tag push without a branch."
+            echo "This is probably a tag push without the associated commit pushed as well."
             exit 1
           fi
           BRANCH=${raw##*/}
@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@v4
         with:
             ref: ${{ env.NAME }}
-
+            fetch-depth: 0
 
       - name: Set env
         id: set-env
@@ -80,6 +80,11 @@ jobs:
           
           MESSAGE=$(git show -s --format=%s | base64 -w 0)
           echo "MESSAGE=$MESSAGE" >> $GITHUB_ENV
+          
+          user=$(git show -s --format=%an | base64 -w 0)
+          echo "USER=$user" >> $GITHUB_ENV
+          email=$(git show -s --format=%ae | base64 -w 0)
+          echo "EMAIL=$email" >> $GITHUB_ENV
 
     outputs:
       ver: ${{ env.VER }}
@@ -87,6 +92,8 @@ jobs:
       ref: ${{ env.REF }}
       date: ${{ env.DATE }}
       message: ${{ env.MESSAGE }}
+      user: ${{ env.USER }}
+      email: ${{ env.EMAIL }}
 
   delete-if-exists:
     runs-on: ubuntu-latest
@@ -199,51 +206,53 @@ jobs:
       - name: UPX
         if : matrix.os == 'windows-latest' # UPX is only available on Windows for now
         run: |
-            if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-                sudo apt-get install upx
-                upx --version
-                echo "UPX_PATH=/usr/bin/upx" >> $GITHUB_ENV
-            elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
                 choco install upx
                 upx --version
                 echo "UPX_PATH=/tools/upx/upx.exe" >> $GITHUB_ENV
-            else
+            elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+                sudo apt-get install upx
+                upx --version
+                echo "UPX_PATH=/usr/bin/upx" >> $GITHUB_ENV
+            elif [[ "${{ matrix.os }}" == "macos-latest" || "${{ matrix.os }}" == "macos-14" ]]; then
                 brew install upx
                 upx --version
                 echo "UPX_PATH=/usr/local/bin/upx" >> $GITHUB_ENV
+            else
+                echo "Unknown OS, did the matrix changed ?" 2>&1
             fi
-        
 
       - name: Build with pyinstaller
         run: |
-          ls pellipop
+          ls pellipop # Debug purposes
 
-          pyinstaller pellipop/gui.py \
-          --onefile \
-          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
-          --hidden-import='PIL._tkinter_finder' \
-          --windowed \
-          --hide-console hide-early
+          pyinstaller \ 
+          pellipop/gui.py \ # Main file
+          --onefile \ # One file -> a unique executable
+          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \ # Name of the executable
+          --hidden-import='PIL._tkinter_finder' \ # PIL is used by ttkbootstrap
+          --windowed \ # Removes the console (but sometimes not)
+          --hide-console hide-early # Hides the console asap, except when launching from a terminal
 
-        #- name: Fake build
+        #- name: Fake build ## Debug
         #  run: |
-        #mkdir -p ./dist
-        #echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
+        #  mkdir -p ./dist
+        #  echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
 
       - name: Check build
         run: |
-          ls ./dist
-          file ./dist/pellipop*
-          du -sh ./dist/pellipop*
-#          ${{ env.UPX_PATH }} ./dist/pellipop* # upx only available on Windows for now
-#          du -sh ./dist/pellipop*
+          ls ./dist # should contain pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} (modulo the extension)
+          file ./dist/pellipop* # should contain ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=..., not stripped or Mach-O 64-bit executable x86_64 or PE32+ executable (console) x86-64, for MS Windows
+          du -sh ./dist/pellipop* # Was around 150MB on v0.4.6 (M1 115MB)
+      #   ${{ env.UPX_PATH }} ./dist/pellipop* # upx only available on Windows for now and should be done by pyinstaller
+      #   du -sh ./dist/pellipop* # Check size after upx, see if it improves
 
-      - name: Macos app
+      - name: Macos app # When building on macos, we have a .app "file", which is actually a folder so we need to archive it to put it in the artifact and then the release
         if : matrix.os == 'macos-latest' || matrix.os == 'macos-14'
         run: |
           tar -czvf ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.tar.gz ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.app        
-          du -sh ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.tar.gz
-          rm -rf ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.app
+          du -sh ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.tar.gz  # Was around 150MB on v0.4.6 (M1 115MB)
+          rm -rf ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}.app # Remove the .app folder to avoid having it in the artifact (shoudn't happen but just in case of an update of the action)
 
       - name: Deploy artifacts
         uses: actions/upload-artifact@v4
@@ -258,6 +267,7 @@ jobs:
     needs:
       - build
       - envs
+      - delete-if-exists # Shouldn't release if delete-if-exists failed or still running
     name: Release binaries
     runs-on: ubuntu-latest
     steps:
@@ -284,7 +294,22 @@ jobs:
             message=$(echo $message | base64 -d)
             echo "Commit message: \`$message\`" >> release.md
             echo "Commit date: ${{ needs.envs.outputs.date }}" >> release.md
+
+      - name: Display release text
+        run: cat release.md
+
+      - name: Change user for release
+        run: |
+          user=${{ needs.envs.outputs.user }}
+          user=$(echo $user | base64 -d)
+          echo "User is $user"
           
+          email=${{ needs.envs.outputs.email }}
+          email=$(echo $email | base64 -d)
+          echo "Email is $email"
+          
+          git config --global user.name "$user"
+          git config --global user.email "$email"
 
       - name: release # TODO: Put user in release ?
         uses: softprops/action-gh-release@v1
