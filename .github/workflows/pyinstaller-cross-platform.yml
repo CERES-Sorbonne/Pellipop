@@ -226,12 +226,18 @@ jobs:
         run: |
           ls pellipop # Debug purposes
 
-          pyinstaller pellipop/gui.py \ # Main file
-          --onefile \ # One file -> a unique executable
-          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \ # Name of the executable
-          --hidden-import='PIL._tkinter_finder' \ # PIL is used by ttkbootstrap
-          --windowed \ # Removes the console (but sometimes not)
-          --hide-console hide-early # Hides the console asap, except when launching from a terminal
+          pyinstaller pellipop/gui.py \
+          --onefile \
+          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
+          --hidden-import='PIL._tkinter_finder' \
+          --windowed \
+          --hide-console hide-early
+
+        # One file -> a unique executable
+        # pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} -> Name of the executable
+        # --hidden-import='PIL._tkinter_finder' -> PIL is used by ttkbootstrap
+        # --windowed -> Removes the console (but sometimes not)
+        # --hide-console hide-early -> Hides the console asap, except when launching from a terminal
 
         #- name: Fake build ## Debug
         #  run: |
@@ -324,8 +330,10 @@ jobs:
           name: ${{ needs.envs.outputs.ver }}
           tag_name: ${{ needs.envs.outputs.tag }}
           body_path: release.md
-          draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
-          prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
+#          draft: ${{ needs.envs.outputs.tag == 'latest' }} # only draft prereleases
+#          prerelease: ${{ needs.envs.outputs.tag == 'latest' }} # prerelease when no version in commit tag
+          draft: ( 1 if ${{ needs.envs.outputs.tag == 'latest' }} else 0 )
+          prerelease: ( 1 if ${{ needs.envs.outputs.tag == 'latest' }} else 0 )
           files: |
             ./dist/*
           target_commitish: ${{ github.sha }}
