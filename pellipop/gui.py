@@ -256,9 +256,6 @@ ttk.Label(
     text='Pellipop, votre ami pour la vie',
     font=("Jetbrains Mono", 30, "bold"),
     cursor="heart",
-    width=1900,
-    justify="center",
-
 ).pack()
 
 input_frame = ttk.Frame(top_frame, padding=10)
