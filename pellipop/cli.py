@@ -34,6 +34,11 @@ parser.add_argument(
     help="Permet de ne pas extraire le texte des vidéos"
 )
 parser.add_argument(
+    "--hamming", type=int, default=10,
+    help="Distance de Hamming pour l'algorithme de comparaison de hash"
+)
+
+parser.add_argument(
     "-g", "--gui", type=bool, default=False, nargs='?', const=True,
     help="Permet d'utiliser l'interface graphique"
 )
@@ -58,6 +63,7 @@ def main(args=args):
 
         whisper_config=args.whisper_config,
         keep_audio=args.keep_audio,
+        hamming=args.hamming
     )
     pellipop.launch()
 

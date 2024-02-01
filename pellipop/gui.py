@@ -212,6 +212,7 @@ def lancer():
         "decouper": decouper.get(),
         "retranscrire": retranscrire.get(),
         "csv": csv.get(),
+        "hamming": int(hamming_int.get()),
     }
 
     try:
@@ -342,7 +343,28 @@ freq_entry = ttk.Entry(
 
 )
 freq_entry.grid(row=3, column=0, columnspan=6, pady=5)
-
+hamming_int = tk.IntVar(value=5)
+hamming_str = tk.StringVar(value="5")
+hamming_label = ttk.Label(freq_frame, text='Distance de Hamming')
+hamming_label.grid(row=4, column=0, columnspan=6, pady=10)
+hamming_slider = ttk.Scale(
+    freq_frame,
+    from_=0,
+    to=10,
+    variable=hamming_int,
+    orient="horizontal",
+    cursor="hand2",
+    length=200,
+    value=5,
+    command=lambda x: hamming_str.set(int(hamming_int.get()))
+)
+hamming_slider.grid(row=5, column=0, columnspan=6, pady=10)
+hamming_slider_info = ttk.Label(
+    freq_frame,
+    textvariable=hamming_str,
+    justify="center",
+)
+hamming_slider_info.grid(row=6, column=0, columnspan=6, pady=10)
 prefix_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 prefix_frame.grid(row=3, column=0)
 ttk.Label(
