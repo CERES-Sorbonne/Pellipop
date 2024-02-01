@@ -58,6 +58,7 @@ class Pellipop:
             "audio": None,
             "text": None,
             "image": None,
+            "image_no_duplicates": None,
             "csv": None,
         }
 
@@ -168,6 +169,27 @@ class Pellipop:
                 actual_hash = ahash
                 img.save(output_path / image.name)
 
+    def del_duplicates_to_new_folder(self, input_path: str | Path)-> Optional[Path]:
+        if not self.outputs["image_no_duplicates"]:
+            raise FileNotFoundError("Le dossier de sortie n'est pas défini")
+        if not self.outputs["image_no_duplicates"].exists():
+            raise FileNotFoundError("Le dossier de sortie n'existe pas")
+        if not self.outputs["image_no_duplicates"].is_dir():
+            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
+
+        folder = self.outputs["image_no_duplicates"] / input_path.name
+        folder.mkdir(parents=True, exist_ok=True)
+
+        actual_hash = None
+
+        for image in tqdm(sorted(file_finder(input_path, format="image")),
+                          desc="Suppression des doublons", unit="image"):
+            img = Image.open(image)
+            ahash = average_hash(img)
+            if actual_hash != ahash or actual_hash is None:
+                actual_hash = ahash
+                img.save(folder / image.name)
+
     @staticmethod
     def format_time(frame: int, fps: int) -> str:
         heures, reste = divmod(frame // fps, 3600)
@@ -218,19 +240,23 @@ class Pellipop:
 
     def decouper_video(self) -> Optional[Path]:
         print("Découpage des vidéos")
-        self.outputs["video"] = self.output_folder / "video"
+        self.outputs["image"] = self.output_folder / "image"
+
+        if self.delete_duplicates:
+            self.outputs["image_no_duplicates"] = self.output_folder / "image_no_duplicates"
+            self.outputs["image_no_duplicates"].mkdir(parents=True, exist_ok=True)
 
         for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
-            output_folder = self.outputs["video"] / fichier.stem.replace(' ', '_')
+            output_folder = self.outputs["image"] / fichier.stem.replace(' ', '_')
             output_folder.mkdir(parents=True, exist_ok=True)
 
             self.save_frame_range_sec(fichier, output_folder)
 
             if self.delete_duplicates:
-                self.del_duplicates(output_folder)
+                self.del_duplicates_to_new_folder(output_folder)
 
         print("Découpage terminé !")
-        return self.outputs["video"]
+        return self.outputs["image"]
 
     def extract_audio_then_text(self) -> Optional[Path]:
 
