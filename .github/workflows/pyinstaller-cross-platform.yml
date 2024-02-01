@@ -301,7 +301,7 @@ jobs:
                 echo "Manually triggered release for the latest commit on branch ${{ needs.envs.outputs.ref }}" >> release.md
             else
                 echo "Auto-generated release for the tag ${{ needs.envs.outputs.tag }}" >> release.md
-                tm=$(git tag -l --format='%(contents)' ${{ needs.envs.outputs.tag }}) | sed 's/ *$//g' | sed '/^[[:space:]]*$/d')
+                tm=$(git tag -l --format='%(contents)' ${{ needs.envs.outputs.tag }} | sed 's/ *$//g' | sed '/^[[:space:]]*$/d')
                 echo "Tag message: $tm" >> release.md
             fi
             message=${{ needs.envs.outputs.message }}
