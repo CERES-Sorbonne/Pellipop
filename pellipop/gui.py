@@ -157,10 +157,10 @@ def import_error():
 def disable_freq():
     if mode.get() == "i":
         freq_entry.config(state="disabled")
-        hamming_slider.config(state="normal")
+        hamming_slider.config(state="normal", cursor="hand2")
     else:
         freq_entry.config(state="normal")
-        hamming_slider.config(state="disabled")
+        hamming_slider.config(state="disabled", cursor="pirate")
 
 
 def disable_prefix():
@@ -245,9 +245,9 @@ root = ttk.Window(
     "Pellipop",
     themename="journal",
     iconphoto="pellipop.ico",
-    size=(1400, 900),
+    size=(1400, 1200),
     resizable=(True, True),
-    minsize=(950, 750),
+    minsize=(950, 950),
 )
 
 main_frame = ttk.Frame(root, padding=10)
@@ -266,7 +266,8 @@ top_frame.grid(row=0, column=0, columnspan=2, sticky="sew")
 ttk.Label(
     top_frame,
     text='Pellipop, votre ami pour la vie',
-    font=("Jetbrains Mono", 30, "bold")
+    font=("Jetbrains Mono", 30, "bold"),
+    cursor="heart",
 ).pack()
 
 input_frame = ttk.Frame(top_frame, padding=10)
@@ -275,7 +276,7 @@ input_label = ttk.Label(input_frame, text='Entrez le chemin du dossier à analys
 input_label.grid(row=0, column=0, columnspan=6)
 input_folder = tk.StringVar(value="Entrez le chemin du dossier à analyser")
 input_entry = ttk.Entry(input_frame, textvariable=input_folder)
-input_button = ttk.Button(input_frame, text="Browse", command=browse_input)
+input_button = ttk.Button(input_frame, text="Browse", command=browse_input, cursor="boat")
 input_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
 input_button.grid(row=1, column=5, padx=10)
 how_many_str = tk.StringVar(value="0 fichiers trouvés")
@@ -288,9 +289,18 @@ output_label = ttk.Label(output_frame, text='Entrez le chemin du dossier de sort
 output_label.grid(row=0, column=0, columnspan=6)
 output_folder = tk.StringVar(value=default_output_path)
 output_entry = ttk.Entry(output_frame, textvariable=output_folder)
-output_button = ttk.Button(output_frame, text="Browse", command=browse_output)
+output_button = ttk.Button(output_frame, text="Browse", command=browse_output, cursor="sailboat")
 output_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
 output_button.grid(row=1, column=5, padx=10)
+
+progress_frame = ttk.Frame(top_frame, padding=10)
+progress_frame.pack()
+progress_label = ttk.Label(progress_frame, text='Progression')
+progress_label.grid(row=0, column=0, columnspan=6)
+progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=500, mode="determinate")
+progress_bar.grid(row=1, column=0, columnspan=6, pady=5)
+
+
 
 ## LEFT FRAME - Découper les vidéos
 left_select_frame = ttk.Frame(main_frame)
@@ -355,7 +365,7 @@ hamming_slider = ttk.Scale(
     to=10,
     variable=hamming_int,
     orient="horizontal",
-    cursor="hand2",
+    cursor="pirate",
     length=200,
     value=5,
     command=lambda x: hamming_str.set(int(hamming_int.get())),
@@ -421,7 +431,7 @@ import_entry = ttk.Entry(
 
 )
 import_entry.grid(row=1, column=0, columnspan=2, sticky="ew")
-import_button = ttk.Button(import_frame, text="Importer", command=url_import)
+import_button = ttk.Button(import_frame, text="Importer", command=url_import, cursor="gobbler")
 import_button.grid(row=1, column=2)
 
 
@@ -436,7 +446,7 @@ csv = tk.BooleanVar(value=True)
 csv_check = ttk.Checkbutton(bottom_frame, variable=csv)
 csv_check.grid(row=0, column=2, padx=10)
 
-lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer)
+lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer, cursor="gumby")
 lancer_button.grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
 def main():
