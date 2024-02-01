@@ -19,10 +19,8 @@ defaults:
     shell: bash # Use bash shell for every os
 
 jobs:
-
   get-ref:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -148,8 +146,6 @@ jobs:
           TAG_MESSAGE=$(echo $TAG_MESSAGE | base64 -d)
           echo "Decoded tag message is $TAG_MESSAGE"
           
-            
-  
 
   build:
     name: Build release binaries
@@ -257,7 +253,7 @@ jobs:
       - name: Check build
         run: |
           ls ./dist # should contain pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} (modulo the extension)
-          file ./dist/pellipop* # should contain ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=..., not stripped or Mach-O 64-bit executable x86_64 or PE32+ executable (console) x86-64, for MS Windows
+          file ./dist/pellipop* # should contain ELF 64-bit or Mach-O 64-bit executable (modulo x86 arm64) or PE32+ executable (console) x86-64
           du -sh ./dist/pellipop* # Was around 150MB on v0.4.6 (M1 115MB)
       #   ${{ env.UPX_PATH }} ./dist/pellipop* # upx only available on Windows for now and should be done by pyinstaller
       #   du -sh ./dist/pellipop* # Check size after upx, see if it improves
