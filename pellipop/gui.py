@@ -13,9 +13,8 @@ from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 class URLImportGUIError(Exception):
     def __init__(self, message):
         super().__init__(message)
-        import_label["text"] = message
-        import_label["foreground"] = "red"
-        import_entry.config(state="normal")
+        import_label.config(foreground="red", text=message, cursor="pirate")
+        import_entry.config(state="normal", cursor="arrow")
 
 
 def url_import():
@@ -31,12 +30,10 @@ def url_import():
         import_error()
         return
 
-    import_entry.config(state="disabled")
-    import_button.config(state="disabled")
+    import_entry.config(state="disabled", cursor="X_cursor")
+    import_button.config(state="disabled", cursor="X_cursor")
+    import_label.config(cursor="watch", foreground="grey", text="Importation en cours...")
 
-    import_label["foreground"] = "grey"
-
-    import_label["text"] = "Importation en cours..."
     try:
         wu.import_and_set()
     except URLImportError as e:
@@ -48,8 +45,7 @@ def url_import():
 
     print("Le format du fichier de configuration est correct")
 
-    import_label["text"] = "Importation terminée !"
-    import_label["foreground"] = "green"
+    import_label.config(text="Importation terminée !", foreground="green", cursor="arrow")
 
 
 def browse(
@@ -65,10 +61,8 @@ def browse(
         path = default_path
     else:
         path = Path(path)
-
     if not path.exists():
         path = default_path
-
     if not path.is_dir():
         path = path.parent
 
@@ -80,7 +74,6 @@ def browse(
 
     if not path:
         return
-
     print(path)
 
     if add_suffix:
@@ -89,16 +82,13 @@ def browse(
             path.mkdir(parents=True)
 
     path_var.set(path)
-
     return path
 
 
 def browse_input():
     path = browse(input_folder, mustexist=True, title="Choisissez le dossier à analyser")
-
     if not path:
         return
-
     how_many_str.set(f"{how_many_files(path)} fichiers trouvés")
 
 
@@ -114,12 +104,10 @@ def browse_output():
 def validatepositiveint(var):
     if not isinstance(var.get(), str):
         return 0
-
     try:
         int(var.get())
     except ValueError:
         return 0
-
     return 1
 
 
@@ -156,20 +144,20 @@ def import_error():
 
 def disable_freq():
     if mode.get() == "i":
-        freq_entry.config(state="disabled")
+        freq_entry.config(state="disabled", cursor="X_cursor")
         hamming_slider.config(state="normal", cursor="hand2")
     else:
-        freq_entry.config(state="normal")
-        hamming_slider.config(state="disabled", cursor="pirate")
+        freq_entry.config(state="normal", cursor="xterm")
+        hamming_slider.config(state="disabled", cursor="pirate")  # X_cursor
 
 
 def disable_prefix():
     if prefix.get():
-        prefix_entry.config(state="normal")
-        prefix_label["foreground"] = "black"
+        prefix_entry.config(state="normal", cursor="xterm")
+        prefix_label.config(foreground="black", cursor="arrow")
     else:
-        prefix_entry.config(state="disabled")
-        prefix_label["foreground"] = "grey"
+        prefix_entry.config(state="disabled", cursor="X_cursor")
+        prefix_label.config(foreground="grey", cursor="X_cursor")
 
 
 def validate():
@@ -268,6 +256,9 @@ ttk.Label(
     text='Pellipop, votre ami pour la vie',
     font=("Jetbrains Mono", 30, "bold"),
     cursor="heart",
+    width=1900,
+    justify="center",
+
 ).pack()
 
 input_frame = ttk.Frame(top_frame, padding=10)
@@ -352,6 +343,7 @@ freq_entry = ttk.Entry(
     validate="focusout",
     validatecommand=validate_freq,
     invalidcommand=freq_error,
+    cursor="xterm",
 
 )
 freq_entry.grid(row=2, column=0, columnspan=6, pady=5)  # /!\ BEFORE the second radiobutton
