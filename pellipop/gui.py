@@ -157,8 +157,10 @@ def import_error():
 def disable_freq():
     if mode.get() == "i":
         freq_entry.config(state="disabled")
+        hamming_slider.config(state="normal")
     else:
         freq_entry.config(state="normal")
+        hamming_slider.config(state="disabled")
 
 
 def disable_prefix():
@@ -327,11 +329,11 @@ ttk.Radiobutton(
 ).grid(row=1, column=0, columnspan=6, pady=10, padx=5)
 ttk.Radiobutton(
     freq_frame,
-    text="Découpage intelligent (par plan)",
+    text="Découpage automatique (selon la similarité des images)",
     variable=mode,
     value="i",
     command=disable_freq,
-).grid(row=2, column=0, columnspan=6, pady=10, padx=5)
+).grid(row=3, column=0, columnspan=6, pady=10, padx=5)
 freq_int = tk.StringVar(value="5")
 freq_entry = ttk.Entry(
     freq_frame,
@@ -342,7 +344,7 @@ freq_entry = ttk.Entry(
     invalidcommand=freq_error,
 
 )
-freq_entry.grid(row=3, column=0, columnspan=6, pady=5)
+freq_entry.grid(row=2, column=0, columnspan=6, pady=5)  # /!\ BEFORE the second radiobutton
 hamming_int = tk.IntVar(value=5)
 hamming_str = tk.StringVar(value="5")
 hamming_label = ttk.Label(freq_frame, text='Distance de Hamming')
@@ -356,7 +358,8 @@ hamming_slider = ttk.Scale(
     cursor="hand2",
     length=200,
     value=5,
-    command=lambda x: hamming_str.set(int(hamming_int.get()))
+    command=lambda x: hamming_str.set(int(hamming_int.get())),
+    state="disabled",
 )
 hamming_slider.grid(row=5, column=0, columnspan=6, pady=10)
 hamming_slider_info = ttk.Label(
