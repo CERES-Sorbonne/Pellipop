@@ -5,13 +5,13 @@ from typing import Optional
 
 import cv2
 from PIL import Image
-from imagehash import average_hash
+from imagehash import dhash  # ,average_hash, phash, colorhash, whash
 from tqdm.auto import tqdm
 
 from pellipop.fileFinder import file_finder, how_many_files
 from pellipop.speech_to_text import extractText, extractAudio, whisperMode
 
-default_output_path = f'{Path.home() / "Documents" / "Pellipop"}/'
+default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()
 
 
 class Pellipop:
@@ -64,7 +64,7 @@ class Pellipop:
             "csv": None,
         }
 
-        self.fichiers = list(file_finder(self.input_folder))
+        self.fichiers = sorted(file_finder(self.input_folder), key=lambda x: x.name)
         self.hm = len(self.fichiers)
 
     def launch(self) -> Optional[Path]:
@@ -127,50 +127,6 @@ class Pellipop:
 
         return self.outputs["csv"]
 
-    # @staticmethod
-    # def del_duplicates(input_path: str | Path) -> None:
-    #     if isinstance(input_path, str):
-    #         input_path = Path(input_path)
-    #     elif not isinstance(input_path, Path):
-    #         raise TypeError("Le chemin d'entrée doit être un str ou un Path")
-    #
-    #     all_hashs = set()
-    #     to_delete = []
-    #
-    #     for image in input_path.glob("*"):
-    #         img = Image.open(image)
-    #         ahash = average_hash(img)
-    #         if ahash in all_hashs:
-    #             to_delete.append(image)
-    #         else:
-    #             all_hashs.add(ahash)
-    #     for path in to_delete:
-    #         path.unlink()
-    #     print(f"Suppression de {len(to_delete)} doublons !")
-    #
-    # @staticmethod
-    # def duplicateless_folder_seq(input_path: str | Path, output_path: str | Path) -> None:
-    #     if isinstance(input_path, str):
-    #         input_path = Path(input_path)
-    #     elif not isinstance(input_path, Path):
-    #         raise TypeError("Le chemin d'entrée doit être un str ou un Path")
-    #
-    #     if isinstance(output_path, str):
-    #         output_path = Path(output_path)
-    #     elif not isinstance(output_path, Path):
-    #         raise TypeError("Le chemin de sortie doit être un str ou un Path")
-    #
-    #     output_path.mkdir(parents=True, exist_ok=True)
-    #
-    #     actual_hash = None
-    #
-    #     for image in tqdm(input_path.glob("*")):
-    #         img = Image.open(image)
-    #         ahash = average_hash(img)
-    #         if ahash != actual_hash:
-    #             actual_hash = ahash
-    #             img.save(output_path / image.name)
-
     def del_duplicates_to_new_folder(self, input_path: str | Path) -> Optional[Path]:
         if not self.outputs["image_no_duplicates"]:
             raise FileNotFoundError("Le dossier de sortie n'est pas défini")
@@ -191,7 +147,7 @@ class Pellipop:
         for image in tqdm(sorted(file_finder(input_path, format="image")),
                           desc="Suppression des doublons", unit="image"):
             img = Image.open(image)
-            ahash = average_hash(img)
+            ahash = dhash(img)
 
             # If the hash is None, we're supposed to be at the first iteration
             # Then, we check for the hammering distance between the last saved hash and the current one
@@ -277,7 +233,6 @@ class Pellipop:
         return self.outputs["image"]
 
     def extract_audio_then_text(self) -> Optional[Path]:
-
         self.outputs["audio"] = self.output_folder / "audio"
         self.outputs["audio"].mkdir(parents=True, exist_ok=True)
         self.outputs["text"] = self.output_folder / "text"
