@@ -69,9 +69,10 @@ jobs:
         id: set-env
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "TAG=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
-            echo "VER=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_ENV
-            TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ needs.envs.outputs.tag }} | sed 's/ *$//g' | sed '/^[[:space:]]*$/d' | base64 -w 0)
+            TAG=$(echo $GITHUB_REF | cut -d / -f 3)
+            echo "TAG=$TAG" >> $GITHUB_ENV
+            echo "VER=$TAG" >> $GITHUB_ENV
+            TAG_MESSAGE=$(git tag -l --format='%(contents)' $TAG | sed 's/ *$//g' | sed '/^[[:space:]]*$/d' | base64 -w 0)
           else
               echo "VER=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
               echo "TAG=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
