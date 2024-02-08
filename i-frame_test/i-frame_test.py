@@ -1,21 +1,22 @@
 import subprocess
-from time import perf_counter as pc
 from pathlib import Path
+from time import perf_counter as pc
 
 pc1 = pc()
 
 frame_mode = "i-frame"
-freq = 1
+# frame_mode = "const_freq"
+freq = 0.25
 audio = True
 
 video_path = Path('test.mp4')
 output_path = Path('output')
 
+video_path = video_path.resolve()
+
 if output_path.exists():
     for file in output_path.iterdir():
         file.unlink()
-    else:
-        print('output folder is empty')
 else:
     output_path.mkdir()
     print('output folder created')
@@ -27,27 +28,40 @@ map_parts = {
 }
 
 base = (
-    "ffmpeg -hide_banner -loglevel panic "
-    "-nostdin -fps_mode vfr -frame_pts true "
+    "ffmpeg -hide_banner "
+    "-loglevel panic "
+    "-nostdin -y "
 )
 
 if frame_mode == "i-frame":
     base += map_parts["i-frame_part"]
-elif frame_mode == "const_freq":
-    base += map_parts["const_freq_part"].replace("$FREQ", str(freq))
-else:
-    raise ValueError("frame_mode should be either i-frame or const_freq")
 
-base += f"{output_path}/{video_path.stem}_d.jpg"
+base += (
+    "-i $VIDEO_PATH "
+)
+
+if frame_mode == "const_freq":
+    base += map_parts["const_freq_part"]
+elif frame_mode == "i-frame":
+    base += "-fps_mode vfr -frame_pts true "
+
+base += (
+    "$OUTPUT_FOLDER/$FILE_STEM_%d.jpg "
+)
 
 if audio:
-    base += (
-        map_parts["audio_part"]
-        .replace("$OUTPUT_FOLDER", str(output_path))
-        .replace("$FILE_STEM", video_path.stem)
-    )
+    base += map_parts["audio_part"]
 
-subprocess.run(base, shell=True)
+command = (
+    base
+    .replace("$OUTPUT_FOLDER", str(output_path))
+    .replace("$FILE_STEM", video_path.stem)
+    .replace("$FREQ", str(freq))
+    .replace("$VIDEO_PATH", str(video_path))
+)
+
+print(command)
+subprocess.run(command, shell=True)
 
 print(f"Time taken: {pc() - pc1:.2f} seconds")
 print(f"Time in ms: {(pc() - pc1) * 1000:.2f} ms")
