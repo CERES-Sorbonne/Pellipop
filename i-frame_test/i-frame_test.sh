@@ -41,3 +41,6 @@ mkdir $OUTPUT_DIR
 ts=$(date +%s%N)
 ffmpeg -hide_banner -loglevel panic -nostdin -y $frame_part -i $INPUT_FILE -fps_mode vfr -frame_pts true $OUTPUT_DIR/$FILE_NAME%d.png $audio_part
 echo "Fait en : $((($(date +%s%N)-ts)/1000000))ms"
+
+ffprobe -v panic -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT_FILE > $OUTPUT_DIR/fps.txt
+echo "Fait en : $((($(date +%s%N)-ts)/1000000))ms"
