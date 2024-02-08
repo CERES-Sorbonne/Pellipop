@@ -4,7 +4,7 @@ import sys
 
 from tqdm.auto import tqdm
 
-from pellipop.fileFinder import file_finder
+from pellipop.file_finder import file_finder
 
 
 def toAudio(videoPath: str | Path, audioPath: str | Path) -> str:  # , extension=".wav"):

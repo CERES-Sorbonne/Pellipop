@@ -6,7 +6,7 @@ from tkinter import filedialog
 import ttkbootstrap as ttk
 
 from pellipop.main import Pellipop, default_output_path
-from pellipop.fileFinder import how_many_files
+from pellipop.file_finder import how_many_files
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 

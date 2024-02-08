@@ -6,7 +6,7 @@ from typing import Optional
 
 from tqdm.auto import tqdm
 
-from pellipop.fileFinder import file_finder, how_many_files
+from pellipop.file_finder import file_finder, how_many_files
 from pellipop.speech_to_text import extractText, whisperMode
 
 default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()

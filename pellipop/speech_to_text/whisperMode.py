@@ -5,6 +5,8 @@ from pathlib import Path
 from tqdm.auto import tqdm
 from whisper_client.main import WhisperClient, Mode
 
+from pellipop.file_finder import file_finder
+
 
 # with open("config.json", "r", encoding="utf-8") as f:
 #     config_data = json.load(f)
