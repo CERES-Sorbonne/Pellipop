@@ -3,7 +3,7 @@ from typing import Generator
 
 video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
 image_formats = {".jpg"}
-audio_formats = {".wav"}
+audio_formats = {".wav", ".aac", ".mp3"}
 text_formats = {".txt"}
 csv_formats = {".csv"}
 json_formats = {".json"}
@@ -16,6 +16,7 @@ map_formats = {
     "csv": csv_formats,
     "json": json_formats,
 }
+
 
 def file_finder(
         path: str | Path,
@@ -43,4 +44,3 @@ def file_finder(
 
 def how_many_files(path: str | Path, deep: int = -1) -> int:
     return len(list(file_finder(path, deep)))
-
