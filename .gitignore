@@ -8,6 +8,7 @@ linux-fix/
 *.wav
 *.csv
 *.json
+*.aac
 
 
 # Byte-compiled / optimized / DLL files

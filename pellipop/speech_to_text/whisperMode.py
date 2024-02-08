@@ -101,7 +101,7 @@ def toTextFolder(
             **config_data
         )
 
-    audios = tqdm(list(audioPath.glob("*.wav")))
+    audios = tqdm(list(audioPath.glob("*.aac")))
     for audio in audios:
         text = textPath / audio.with_suffix(".json").name \
             if mode != Mode.text else textPath / audio.with_suffix(".txt").name
