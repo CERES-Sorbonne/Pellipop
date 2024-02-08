@@ -4,8 +4,10 @@ import sys
 
 from tqdm.auto import tqdm
 
+from pellipop.file_finder import file_finder
 
-def toAudio(videoPath: str | Path, audioPath: str | Path, extension=".wav"):
+
+def toAudio(videoPath: str | Path, audioPath: str | Path) -> str:  # , extension=".wav"):
     if isinstance(videoPath, str):
         videoPath = Path(videoPath)
     if isinstance(audioPath, str):
@@ -21,6 +23,7 @@ def toAudio(videoPath: str | Path, audioPath: str | Path, extension=".wav"):
 
     if audioPath.exists():
         print(f"The audio file already exists ({audioPath.name})")
+        return audioPath.as_posix()
 
     subprocess.run(
         ["ffmpeg", "-i", videoPath.as_posix(), audioPath.as_posix()],
@@ -45,11 +48,12 @@ def toAudioFolder(videoPath: str | Path, audioPath: str | Path, extension=".wav"
     if not audioPath.exists():
         audioPath.mkdir(parents=True)
 
-    videos = tqdm(list(videoPath.glob("*.mp4")))
+    # videos = tqdm(list(videoPath.glob("*.mp4")))
+    videos = tqdm(list(file_finder(videoPath)))
     for video in videos:
         audio = audioPath / video.with_suffix(extension).name
 
-        toAudio(video, audio, extension=extension)
+        toAudio(video, audio)  # , extension=extension)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,8 @@ from pathlib import Path
 from tqdm.auto import tqdm
 from whisper_client.main import WhisperClient, Mode
 
+from pellipop.file_finder import file_finder
+
 
 # with open("config.json", "r", encoding="utf-8") as f:
 #     config_data = json.load(f)
@@ -28,7 +30,7 @@ def rm_tree(pth: Path) -> None:
 
 
 def toText(
-        config_data,
+        config_data: dict,
         audioPath: str | Path,
         textPath: str | Path,
         wc: WhisperClient = None,
@@ -61,12 +63,9 @@ def toText(
     wc.wait_for_result(hash_audio=hash_)
 
     res = wc.get_result_with_mode(
-        mode=mode if not timestamped else Mode.full,
+        mode=mode,
         hash_audio=hash_
     )
-
-    if timestamped:
-        raise NotImplementedError("timestamped mode not implemented yet")
 
     with open(textPath, "w", encoding="utf-8") as f:
         if isinstance(res, dict):
@@ -78,12 +77,11 @@ def toText(
 
 
 def toTextFolder(
-        config_data,
+        config_data: dict,
         audioPath: str | Path,
         textPath: str | Path,
         wc: WhisperClient = None,
         mode: Mode = Mode.full,
-        timestamped: bool = False,
 ):
     if isinstance(audioPath, str):
         audioPath = Path(audioPath)
@@ -105,12 +103,12 @@ def toTextFolder(
             **config_data
         )
 
-    audios = tqdm(list(audioPath.glob("*.wav")))
+    audios = tqdm(list(file_finder(audioPath, format="audio")))
     for audio in audios:
         text = textPath / audio.with_suffix(".json").name \
             if mode != Mode.text else textPath / audio.with_suffix(".txt").name
 
-        toText(config_data, audio, text, wc=wc, mode=mode, timestamped=timestamped)
+        toText(config_data, audio, text, wc=wc, mode=mode)
 
 
 def main(
@@ -120,7 +118,6 @@ def main(
         wc: WhisperClient = None,
         mode: Mode | str = Mode.full,
         folder: bool = False,
-        timestamped: bool = False,
 ):
     if isinstance(config_data, str):
         config_data = Path(config_data)
@@ -155,9 +152,9 @@ def main(
         )
 
     if folder:
-        toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode, timestamped=timestamped)
+        toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode)
     else:
-        toText(config_data, audioPath, textPath, wc=wc, mode=mode, timestamped=timestamped)
+        toText(config_data, audioPath, textPath, wc=wc, mode=mode)
 
 
 if __name__ == "__main__":

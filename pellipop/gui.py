@@ -3,94 +3,77 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 
-import requests
 import ttkbootstrap as ttk
-import validators
-from whisper_client.main import Mode
 
-from main import pied
-
-video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
+from pellipop.main import Pellipop, default_output_path
+from pellipop.file_finder import how_many_files
+from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 
-class URLImportError(Exception):
+class URLImportGUIError(Exception):
     def __init__(self, message):
         super().__init__(message)
-        import_label["text"] = message
-        import_label["foreground"] = "red"
-        import_entry.config(state="normal")
+        import_label.config(foreground="red", text=message, cursor="pirate")
+        import_entry.config(state="normal", cursor="arrow")
 
 
 def url_import():
-    configfile = Path.home() / ".whisperrc"
-    if configfile.exists():
-        print("Le fichier de configuration existe déjà, il sera écrasé")
-        with configfile.open(mode="r", encoding="utf-8") as f:
-            print(json.load(f, indent=4))
-
+    global wu
     url = import_file.get()
 
     if not url:
         return
 
-    if not validate_url():
+    wu.set_url(url)
+
+    if not wu.valid:
         import_error()
         return
 
-    import_entry.config(state="disabled")
-    import_button.config(state="disabled")
-
-    import_label["foreground"] = "grey"
-
-    import_label["text"] = "Importation en cours..."
+    import_entry.config(state="disabled", cursor="X_cursor")
+    import_button.config(state="disabled", cursor="X_cursor")
+    import_label.config(cursor="watch", foreground="grey", text="Importation en cours...")
 
     try:
-        r = requests.get(url)
-        r.raise_for_status()
-        config = r.json()
-    except requests.exceptions.HTTPError as errh:
-        raise URLImportError(f"Erreur HTTP : {errh}")
-    except requests.exceptions.ConnectionError as errc:
-        raise URLImportError(f"Erreur de connexion : {errc}")
-    except requests.exceptions.Timeout as errt:
-        raise URLImportError(f"Timeout : {errt}")
-    except requests.exceptions.RequestException as err:
-        raise URLImportError(f"Erreur : {err}")
+        wu.import_and_set()
+    except URLImportError as e:
+        import_error()
+        raise URLImportGUIError(e.message)
     except json.decoder.JSONDecodeError as err:
-        raise URLImportError(f"Erreur JSON : {err}")
+        import_error()
+        raise URLImportGUIError(f"Erreur JSON : {err}")
 
     print("Le format du fichier de configuration est correct")
-    print(json.dumps(config, indent=4))
 
-    with configfile.open(mode="w", encoding="utf-8") as f:
-        json.dump(config, f)
-
-    import_label["text"] = "Importation terminée !"
-    import_label["foreground"] = "green"
+    import_label.config(text="Importation terminée !", foreground="green", cursor="arrow")
 
 
-def browse(path_var, default_path=Path.home(), add_suffix=None):
+def browse(
+        path_var,
+        default_path=Path.home(),
+        add_suffix=None,
+        mustexist: bool = False,
+        title: str = "Choisissez un dossier",
+):
     path = path_var.get()
 
     if path == "Entrez le chemin du dossier à analyser":
         path = default_path
     else:
         path = Path(path)
-
     if not path.exists():
         path = default_path
-
     if not path.is_dir():
         path = path.parent
 
     path = filedialog.askdirectory(
         initialdir=path,
-        title="Select a folder",
+        title=title,
+        mustexist=mustexist,
     )
 
     if not path:
         return
-
     print(path)
 
     if add_suffix:
@@ -99,40 +82,32 @@ def browse(path_var, default_path=Path.home(), add_suffix=None):
             path.mkdir(parents=True)
 
     path_var.set(path)
-
     return path
 
 
 def browse_input():
-    path = browse(input_folder)
-
+    path = browse(input_folder, mustexist=True, title="Choisissez le dossier à analyser")
     if not path:
         return
-
-    how_many_str.set(f"{len([f for f in Path(path).iterdir() if f.suffix in video_formats])} fichiers trouvés")
-
-
-def browse_pic_output():
-    browse(pics_output_folder, default_path=Path().cwd(), add_suffix="pellipop_pics")
-
-
-def browse_text_output():
-    browse(text_output_folder, default_path=Path().cwd(), add_suffix="pellipop_text")
+    how_many_str.set(f"{how_many_files(path)} fichiers trouvés")
 
 
 def browse_output():
-    browse(output_folder, default_path=Path().cwd(), add_suffix="pellipop_output")
+    browse(
+        output_folder,
+        default_path=Path().cwd(),
+        add_suffix="pellipop_output",
+        title="Choisissez le dossier de sortie"
+    )
 
 
 def validatepositiveint(var):
     if not isinstance(var.get(), str):
         return 0
-
     try:
         int(var.get())
     except ValueError:
         return 0
-
     return 1
 
 
@@ -149,24 +124,8 @@ def validate_prefix():
 
 def validate_url():
     url = import_file.get()
-
-    # Complete l'url si besoin (ex: www.google.com -> https://www.google.com)
-    # Le validateur ne fonctionne pas avec les url sans protocole ni sous-domaine
-    if not url.startswith("http"):
-        if url.count(".") < 2:
-            url = "www." + url
-        url = "https://" + url
-    else:
-        if url.count(".") < 2:
-            url = url.replace("https://", "https://www.")
-            url = url.replace("http://", "http://www.")
-
-    print(url)
-
-    if validators.url(url):
-        return 1
-    else:
-        return 0
+    wu.set_url(url)
+    return int(wu.validate_url())  # Boolean output but tkinter needs int
 
 
 def freq_error():
@@ -185,38 +144,24 @@ def import_error():
 
 def disable_freq():
     if mode.get() == "i":
-        freq_entry.config(state="disabled")
+        freq_entry.config(state="disabled", cursor="X_cursor")
     else:
-        freq_entry.config(state="normal")
+        freq_entry.config(state="normal", cursor="xterm")
 
 
 def disable_prefix():
     if prefix.get():
-        prefix_entry.config(state="normal")
-        prefix_label["foreground"] = "black"
+        prefix_entry.config(state="normal", cursor="xterm")
+        prefix_label.config(foreground="black", cursor="arrow")
     else:
-        prefix_entry.config(state="disabled")
-        prefix_label["foreground"] = "grey"
+        prefix_entry.config(state="disabled", cursor="X_cursor")
+        prefix_label.config(foreground="grey", cursor="X_cursor")
 
 
 def validate():
     errors = []
-
-    if decouper.get():
-        errors.extend(validate_decouper())
-
-    if retranscrire.get():
-        errors.extend(validate_retranscrire())
-
-    if errors:
-        root.bell()
-        print(errors)
-        return
-
-
-def validate_decouper():
-    errors = []
-    if not pics_output_folder.get() or not Path(pics_output_folder.get()).exists():
+    out_fold = output_folder.get()
+    if out_fold != default_output_path and (not out_fold or not Path(out_fold).exists()):
         errors.append("Veuillez entrer un dossier de sortie pour les images")
 
     if mode.get() != "i" and not validate_freq():
@@ -225,60 +170,59 @@ def validate_decouper():
     if prefix.get() and not validate_prefix():
         errors.append("Veuillez entrer une longueur de préfixe valide")
 
-    return errors
+    if errors:
+        root.bell()
+        print(errors)
+        return False
 
-
-def validate_retranscrire():
-    errors = []
-
-    if not text_output_folder.get() or not Path(text_output_folder.get()).exists():
-        errors.append("Veuillez entrer un dossier de sortie pour les fichiers texte")
-
-    if not box.get() or not box.get().lower() in Mode:
-        errors.append("Veuillez entrer un mode de retranscription valide")
-
-    return errors
-
+    return True
 
 def lancer():
     print("Lancer")
-    validate()
+
+    if not validate():
+        return
 
     lancer_button.config(state="disabled")
 
+    if mode.get() == "s":
+        freq = int(freq_int.get())
+    elif mode.get() == "s-1":
+        freq = None
+    else:
+        freq = None
+
     config = {
-        "intervalle_de_temps": freq_int.get() if mode.get() != "i" else None,
+        "intervale": freq,
         "input_folder": input_folder.get(),
         "output_folder": output_folder.get(),
-        "remove_duplicates": mode.get() == "i",
-        "keep_audio": False,
-        "whisper_config": None,
-        "whisper_mode": mode.get().lower(),
-        "whisper_timestamped": timestamped.get(),
+        "delete_duplicates": mode.get() == "i",
         "decouper": decouper.get(),
         "retranscrire": retranscrire.get(),
         "csv": csv.get(),
     }
 
     try:
-        csv_outp = pied(**config)
+        pelli = Pellipop(**config)
+        csv_outp = pelli.launch()
+
     except Exception as e:
         print(e)
         lancer_button.config(state="normal")
         lancer_button.bell()
         lancer_button["text"] = "Erreur"
-        lancer_button["foreground"] = "red"
+        # lancer_button["foreground"] = "red"
         return
 
     lancer_button.config(state="normal")
     lancer_button["text"] = "Lancer"
-    lancer_button["foreground"] = "green"
+    # lancer_button["foreground"] = "green"
+    # TODO : Alternative to foreground
 
     if csv_outp:
         print(f"Le fichier csv a été généré : {csv_outp}")
 
     root.focus_force()
-
 
 ## ROOT
 
@@ -286,9 +230,9 @@ root = ttk.Window(
     "Pellipop",
     themename="journal",
     iconphoto="pellipop.ico",
-    size=(1400, 900),
+    size=(1400, 1200),
     resizable=(True, True),
-    minsize=(950, 750),
+    minsize=(950, 950),
 )
 
 main_frame = ttk.Frame(root, padding=10)
@@ -307,26 +251,41 @@ top_frame.grid(row=0, column=0, columnspan=2, sticky="sew")
 ttk.Label(
     top_frame,
     text='Pellipop, votre ami pour la vie',
-    font=("Jetbrains Mono", 30, "bold")
+    font=("Jetbrains Mono", 30, "bold"),
+    cursor="heart",
 ).pack()
 
 input_frame = ttk.Frame(top_frame, padding=10)
 input_frame.pack()
+input_label = ttk.Label(input_frame, text='Entrez le chemin du dossier à analyser')
+input_label.grid(row=0, column=0, columnspan=6)
 input_folder = tk.StringVar(value="Entrez le chemin du dossier à analyser")
 input_entry = ttk.Entry(input_frame, textvariable=input_folder)
-input_button = ttk.Button(input_frame, text="Browse", command=browse_input)
-input_entry.grid(row=0, column=0, columnspan=5, ipadx=250, pady=5)
-input_button.grid(row=0, column=5, padx=10)
+input_button = ttk.Button(input_frame, text="Browse", command=browse_input, cursor="boat")
+input_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
+input_button.grid(row=1, column=5, padx=10)
 how_many_str = tk.StringVar(value="0 fichiers trouvés")
-ttk.Label(top_frame, textvariable=how_many_str).pack()
+how_many_label = ttk.Label(input_frame, textvariable=how_many_str)
+how_many_label.grid(row=2, column=2, columnspan=4)
 
 output_frame = ttk.Frame(top_frame, padding=10)
 output_frame.pack()
-output_folder = tk.StringVar(value="Entrez le chemin du dossier de sortie")
+output_label = ttk.Label(output_frame, text='Entrez le chemin du dossier de sortie')
+output_label.grid(row=0, column=0, columnspan=6)
+output_folder = tk.StringVar(value=default_output_path)
 output_entry = ttk.Entry(output_frame, textvariable=output_folder)
-output_button = ttk.Button(output_frame, text="Browse", command=browse_output)
-output_entry.grid(row=0, column=0, columnspan=5, ipadx=250, pady=5)
-output_button.grid(row=0, column=5, padx=10)
+output_button = ttk.Button(output_frame, text="Browse", command=browse_output, cursor="sailboat")
+output_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
+output_button.grid(row=1, column=5, padx=10)
+
+progress_frame = ttk.Frame(top_frame, padding=10)
+progress_frame.pack()
+progress_label = ttk.Label(progress_frame, text='Progression')
+progress_label.grid(row=0, column=0, columnspan=6)
+progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=500, mode="determinate")
+progress_bar.grid(row=1, column=0, columnspan=6, pady=5)
+
+
 
 ## LEFT FRAME - Découper les vidéos
 left_select_frame = ttk.Frame(main_frame)
@@ -345,40 +304,31 @@ left_frame.grid(row=2, column=0, sticky="nsew")
 left_lv2_frame = ttk.Frame(left_frame, padding=10)
 left_lv2_frame.pack()
 
-pics_output_frame = ttk.Frame(left_lv2_frame, padding=10)
-# pics_output_frame.grid(row=1, column=0)
-ttk.Label(pics_output_frame, text='Dossier de sortie').grid(row=0, column=0, columnspan=3)
-pics_output_folder = tk.StringVar(value="Entrez le chemin du dossier de sortie")
-pics_output_entry = ttk.Entry(pics_output_frame, textvariable=pics_output_folder)
-pics_output_button = ttk.Button(pics_output_frame, text="Browse", command=browse_pic_output)
-pics_output_entry.grid(row=1, column=0, columnspan=2, pady=5)
-pics_output_button.grid(row=1, column=2)
-
 freq_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 freq_frame.grid(row=2, column=0)
 ttk.Label(freq_frame, text='Fréquence de découpage').grid(row=0, column=0, columnspan=6, pady=10)
-mode = tk.StringVar(value="s-1")
-ttk.Radiobutton(
-    freq_frame,
-    text="par seconde",
-    variable=mode,
-    value="s-1",
-    command=disable_freq
-).grid(row=1, column=0, columnspan=3, pady=10, padx=5)
+mode = tk.StringVar(value="s")
+# ttk.Radiobutton(
+#     freq_frame,
+#     text="par seconde",
+#     variable=mode,
+#     value="s-1",
+#     command=disable_freq
+# ).grid(row=1, column=0, columnspan=3, pady=10, padx=5)
 ttk.Radiobutton(
     freq_frame,
     text="toutes les x secondes",
     variable=mode,
     value="s",
     command=disable_freq,
-).grid(row=1, column=3, columnspan=3, pady=10, padx=5)
+).grid(row=1, column=0, columnspan=6, pady=10, padx=5)
 ttk.Radiobutton(
     freq_frame,
-    text="Découpage intelligent (par plan)",
+    text="Découpage automatique (selon la similarité des images)",
     variable=mode,
     value="i",
     command=disable_freq,
-).grid(row=2, column=0, columnspan=6, pady=10, padx=5)
+).grid(row=3, column=0, columnspan=6, pady=10, padx=5)
 freq_int = tk.StringVar(value="5")
 freq_entry = ttk.Entry(
     freq_frame,
@@ -387,9 +337,10 @@ freq_entry = ttk.Entry(
     validate="focusout",
     validatecommand=validate_freq,
     invalidcommand=freq_error,
+    cursor="xterm",
 
 )
-freq_entry.grid(row=3, column=0, columnspan=6, pady=5)
+freq_entry.grid(row=2, column=0, columnspan=6, pady=5)  # /!\ BEFORE the second radiobutton
 
 prefix_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 prefix_frame.grid(row=3, column=0)
@@ -430,15 +381,6 @@ right_frame.grid(row=2, column=1, sticky="nsew")
 right_lv2_frame = ttk.Frame(right_frame, padding=10)
 right_lv2_frame.pack()
 
-text_output_frame = ttk.Frame(right_lv2_frame, padding=10)
-# text_output_frame.grid(row=1, column=1)
-ttk.Label(text_output_frame, text='Dossier de sortie').grid(row=0, column=0, columnspan=3)
-text_output_folder = tk.StringVar(value="Entrez le chemin du dossier de sortie")
-text_output_entry = ttk.Entry(text_output_frame, textvariable=text_output_folder)
-text_output_button = ttk.Button(text_output_frame, text="Browse", command=browse_text_output)
-text_output_entry.grid(row=1, column=0, columnspan=2, pady=5)
-text_output_button.grid(row=1, column=2)
-
 import_frame = ttk.Frame(right_lv2_frame, padding=10)
 import_frame.grid(row=2, column=1)
 import_label = ttk.Label(import_frame, text='Importer le fichier de configuration')
@@ -453,22 +395,9 @@ import_entry = ttk.Entry(
 
 )
 import_entry.grid(row=1, column=0, columnspan=2, sticky="ew")
-import_button = ttk.Button(import_frame, text="Importer", command=url_import)
+import_button = ttk.Button(import_frame, text="Importer", command=url_import, cursor="gobbler")
 import_button.grid(row=1, column=2)
 
-mode_frame = ttk.Frame(right_lv2_frame, padding=10)
-mode_frame.grid(row=4, column=1)
-ttk.Label(mode_frame, text='Mode de retranscription').grid(row=0, column=0, columnspan=2)
-mode = tk.StringVar(value="Full")
-box = ttk.Combobox(mode_frame, textvariable=mode, values=[e.value.capitalize() for e in Mode])
-box.grid(row=1, column=0, columnspan=2, pady=5)
-
-timestamped_frame = ttk.Frame(right_lv2_frame, padding=10)
-timestamped_frame.grid(row=5, column=1)
-ttk.Label(timestamped_frame, text='Souhaitez-vous que le texte soit timestampé ?').grid(row=0, column=0, columnspan=2)
-timestamped = tk.BooleanVar(value=True)
-timestamped_check = ttk.Checkbutton(timestamped_frame, variable=timestamped)
-timestamped_check.grid(row=0, column=2, padx=10)
 
 ## BOTTOM FRAME - Bouton lancer
 bottom_frame = ttk.Frame(main_frame, padding=10)
@@ -481,8 +410,13 @@ csv = tk.BooleanVar(value=True)
 csv_check = ttk.Checkbutton(bottom_frame, variable=csv)
 csv_check.grid(row=0, column=2, padx=10)
 
-lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer)
+lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer, cursor="gumby")
 lancer_button.grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
-if __name__ == '__main__':
+def main():
+    global wu
+    wu = WhisperFromUrl()
     root.mainloop()
+
+if __name__ == '__main__':
+    main()
