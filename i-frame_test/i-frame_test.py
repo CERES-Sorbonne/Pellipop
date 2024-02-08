@@ -36,9 +36,7 @@ base = (
 if frame_mode == "i-frame":
     base += map_parts["i-frame_part"]
 
-base += (
-    "-i $VIDEO_PATH "
-)
+base += "-i $VIDEO_PATH "
 
 if frame_mode == "const_freq":
     base += map_parts["const_freq_part"]
