@@ -35,7 +35,7 @@ class Pellipop:
             input_folder: str | Path,
             output_folder: str | Path = Path.home() / "Documents" / "Pellipop",
             delete_duplicates: bool = False,
-            decouper: bool = False,
+            decouper: bool = True,
             retranscrire: bool = False,
             csv: bool = False,
             only_text: bool = False,
@@ -44,7 +44,6 @@ class Pellipop:
 
             whisper_config: dict = None,
             keep_audio: bool = False,
-            hamming: int = 10,
     ):
         if args:
             raise
@@ -60,7 +59,6 @@ class Pellipop:
 
         self.whisper_config = whisper_config
         self.keep_audio = keep_audio
-        self.hamming = hamming
 
         self.completed = False
         self.outputs: dict[str, Optional[Path]] = {
