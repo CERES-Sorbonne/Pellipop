@@ -50,7 +50,7 @@ dependencies = [
     "tqdm~=4.66.1",
     "ttkbootstrap~=1.10.1",
     "validators~=0.22.0",
-    "whisper-client>=0.3.0",
+    "whisper-client==0.3.1",
 ]
 
 [project.urls]
