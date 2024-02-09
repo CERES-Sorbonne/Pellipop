@@ -2,6 +2,7 @@ from ttkbootstrap.window import get_default_root
 
 
 class MessageCatalog:
+    """Overriding the class with empty things, we d'ont want any localization anyway"""
     @staticmethod
 
     def translate(src):
