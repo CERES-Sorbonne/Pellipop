@@ -261,7 +261,7 @@ input_label = ttk.Label(input_frame, text='Entrez le chemin du dossier à analys
 input_label.grid(row=0, column=0, columnspan=6)
 input_folder = tk.StringVar(value="Entrez le chemin du dossier à analyser")
 input_entry = ttk.Entry(input_frame, textvariable=input_folder)
-input_button = ttk.Button(input_frame, text="Browse", command=browse_input, cursor="boat")
+input_button = ttk.Button(input_frame, text="Naviguer", command=browse_input, cursor="boat")
 input_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
 input_button.grid(row=1, column=5, padx=10)
 how_many_str = tk.StringVar(value="0 fichiers trouvés")
@@ -274,7 +274,7 @@ output_label = ttk.Label(output_frame, text='Entrez le chemin du dossier de sort
 output_label.grid(row=0, column=0, columnspan=6)
 output_folder = tk.StringVar(value=default_output_path)
 output_entry = ttk.Entry(output_frame, textvariable=output_folder)
-output_button = ttk.Button(output_frame, text="Browse", command=browse_output, cursor="sailboat")
+output_button = ttk.Button(output_frame, text="Naviguer", command=browse_output, cursor="sailboat")
 output_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
 output_button.grid(row=1, column=5, padx=10)
 
