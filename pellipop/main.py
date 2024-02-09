@@ -27,6 +27,7 @@ class Pellipop:
     probe = "ffprobe -v panic -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT_FILE"
 
     ending_digits = re.compile(r"\d+$")
+    ending_time = re.compile(r"\d{2}h_\d{2}m_\d{2}s$")
 
     def __init__(
             self,
@@ -94,6 +95,7 @@ class Pellipop:
         self.decouper_et_audio()
 
         if self.retranscrire:
+            self.from_time_to_timespan()
             self.extract_text()
 
         if self.csv:
@@ -106,74 +108,6 @@ class Pellipop:
         self.completed = True
 
         return self.outputs["csv"]
-
-    @staticmethod
-    def format_time(frame: int) -> str:
-        heures, reste = divmod(frame, 3600)
-        minutes, secondes = divmod(reste, 60)
-        return f'{heures:02d}h_{minutes:02d}m_{secondes:02d}s'
-
-    @staticmethod
-    def format_fime_span(start: str, end: str) -> str:
-        return f"{start}TO{end}.jpg"
-
-    def extract_text(self) -> Optional[Path]:
-        self.outputs["text"] = self.output_folder / "text"
-        self.outputs["text"].mkdir(parents=True, exist_ok=True)
-
-        print("Extraction du texte")
-        if self.whisper_config is not None or self.default_whisper_config.exists():
-            try:
-                whisperMode.main(
-                    self.whisper_config or self.default_whisper_config,
-                    self.outputs["audio"],
-                    self.outputs["text"],
-                    mode="full",
-                    folder=True,
-                )
-            except Exception as e:
-                print(e)
-                print("Erreur lors de l'extraction du texte avec Whisper")
-                extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
-
-        else:
-            print("Aucun fichier de configuration Whisper passé en argument, "
-                  "extraction du texte avec Google Speech-to-Text")
-            extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
-
-        print("Extraction du texte terminée !")
-
-        if not self.keep_audio:
-            for audio in self.outputs["audio"].glob("*"):
-                audio.unlink()
-            self.outputs["audio"].rmdir()
-        else:
-            self.outputs["audio"] = None
-
-        return self.outputs["text"]
-
-    def _only_text(self):
-        """Go from json to txt"""
-        if not self.outputs["text"]:
-            return
-        if not self.outputs["text"].exists():
-            raise FileNotFoundError("Le dossier de sortie n'existe pas")
-        if not self.outputs["text"].is_dir():
-            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
-
-        jsons = list(file_finder(self.outputs["text"], format="json"))
-
-        for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
-            with json_file.open(mode="r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            with json_file.with_suffix(".txt").open(mode="w", encoding="utf-8") as f:
-                f.write(data["text"])
-
-            json_file.unlink()
-
-    def create_csv(self):
-        pass
 
     def decouper_et_audio(
             self,
@@ -270,6 +204,90 @@ class Pellipop:
         time = self.format_time(frame_number * self.intervale)
         new_name = time.join(img.name.rsplit(str(frame_number), 1))
         return img.with_name(new_name)
+
+    def from_time_to_timespan(self):
+        imgs = self.outputs["image"]
+        assert imgs is not None and imgs.exists(), ("Erreur de découpage, "
+                                                    "cette méthode doit s'exécuter après le découpage !")
+
+        for folder in imgs.iterdir():
+            self._from_time_to_timespan_folder(folder)
+
+    def _from_time_to_timespan_folder(self, folder: Path):
+        imgs = sorted(file_finder(folder, format="image"))
+        for i, img in enumerate(imgs[:1]):
+            next_img = imgs[i + 1]
+            img.rename(folder / self.format_fime_span(img.name, next_img.name))
+
+    @staticmethod
+    def format_time(frame: int) -> str:
+        heures, reste = divmod(frame, 3600)
+        minutes, secondes = divmod(reste, 60)
+        return f'{heures:02d}h_{minutes:02d}m_{secondes:02d}s'
+
+    def format_fime_span(self, start: str, end: str) -> str:
+        time_start = self.ending_time.findall(start)[0]
+        time_end = self.ending_time.findall(end)[0]
+        timespan = f"{time_start}_to_{time_end}"
+        return start.replace(time_start, timespan)
+
+    def extract_text(self) -> Optional[Path]:
+        self.outputs["text"] = self.output_folder / "text"
+        self.outputs["text"].mkdir(parents=True, exist_ok=True)
+
+        print("Extraction du texte")
+        if self.whisper_config is not None or self.default_whisper_config.exists():
+            try:
+                whisperMode.main(
+                    self.whisper_config or self.default_whisper_config,
+                    self.outputs["audio"],
+                    self.outputs["text"],
+                    mode="full",
+                    folder=True,
+                )
+            except Exception as e:
+                print(e)
+                print("Erreur lors de l'extraction du texte avec Whisper")
+                extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
+
+        else:
+            print("Aucun fichier de configuration Whisper passé en argument, "
+                  "extraction du texte avec Google Speech-to-Text")
+            extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
+
+        print("Extraction du texte terminée !")
+
+        if not self.keep_audio:
+            for audio in self.outputs["audio"].glob("*"):
+                audio.unlink()
+            self.outputs["audio"].rmdir()
+        else:
+            self.outputs["audio"] = None
+
+        return self.outputs["text"]
+
+    def create_csv(self):
+        pass
+
+    def _only_text(self):
+        """Go from json to txt"""
+        if not self.outputs["text"]:
+            return
+        if not self.outputs["text"].exists():
+            raise FileNotFoundError("Le dossier de sortie n'existe pas")
+        if not self.outputs["text"].is_dir():
+            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
+
+        jsons = list(file_finder(self.outputs["text"], format="json"))
+
+        for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
+            with json_file.open(mode="r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            with json_file.with_suffix(".txt").open(mode="w", encoding="utf-8") as f:
+                f.write(data["text"])
+
+            json_file.unlink()
 
 
 if __name__ == "__main__":
