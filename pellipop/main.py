@@ -71,6 +71,7 @@ class Pellipop:
         }
 
         self.fichiers = sorted(file_finder(self.input_folder), key=lambda x: x.name)
+        self.fichiers_stems = [f.stem for f in self.fichiers]
         self.hm = len(self.fichiers)
 
     def launch(self) -> Optional[Path]:
@@ -95,7 +96,7 @@ class Pellipop:
         self.decouper_et_audio()
 
         if self.retranscrire:
-            self.from_time_to_timespan()
+            # self.from_time_to_timespan()
             self.extract_text()
 
         if self.csv:
@@ -111,7 +112,7 @@ class Pellipop:
 
     def decouper_et_audio(
             self,
-    ):
+    ) -> tuple[Optional[Path], Optional[Path]]:
         self.outputs["image"] = self.output_folder / "image"
         self.outputs["image"].mkdir(parents=True, exist_ok=True)
 
@@ -205,13 +206,15 @@ class Pellipop:
         new_name = time.join(img.name.rsplit(str(frame_number), 1))
         return img.with_name(new_name)
 
-    def from_time_to_timespan(self):
-        imgs = self.outputs["image"]
-        assert imgs is not None and imgs.exists(), ("Erreur de découpage, "
-                                                    "cette méthode doit s'exécuter après le découpage !")
-
-        for folder in imgs.iterdir():
-            self._from_time_to_timespan_folder(folder)
+    # def from_time_to_timespan(self):
+    #     imgs = self.outputs["image"]
+    #     assert imgs is not None and imgs.exists(), ("Erreur de découpage, "
+    #                                                 "cette méthode doit s'exécuter après le découpage !")
+    #
+    #     for folder in imgs.iterdir():
+    #         if folder.name not in self.fichiers_stems:
+    #             continue
+    #         self._from_time_to_timespan_folder(folder)
 
     def _from_time_to_timespan_folder(self, folder: Path):
         imgs = sorted(file_finder(folder, format="image"))
@@ -291,7 +294,8 @@ class Pellipop:
 
 
 if __name__ == "__main__":
-    testdir = "/home/marceau/PycharmProjects/tksel/videos-collecte1"
+    # testdir = "/home/marceau/PycharmProjects/tksel/videos-collecte1"
+    testdir = "/home/marceau/Téléchargements/pelli/"
 
     print(how_many_files(testdir))
 
