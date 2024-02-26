@@ -314,6 +314,10 @@ class Pellipop:
         return self.outputs["text"]
 
     def create_csv(self):
+        assert self.outputs["image"] is not None and self.outputs["text"] is not None, (
+            "Erreur de découpage ou d'extraction de texte, "
+            "cette méthode doit s'exécuter après le découpage et l'extraction de texte !"
+        )
         images = list(file_finder(self.outputs["image"], file_type="image", only_stems=self.fichiers_stems))
         texts = list(file_finder(self.outputs["text"], file_type="json", only_stems=self.fichiers_stems))
 

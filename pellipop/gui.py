@@ -307,7 +307,7 @@ left_lv2_frame.pack()
 freq_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 freq_frame.grid(row=2, column=0)
 ttk.Label(freq_frame, text='Fréquence de découpage').grid(row=0, column=0, columnspan=6, pady=10)
-mode = tk.StringVar(value="s")
+mode = tk.StringVar(value="i")
 # ttk.Radiobutton(
 #     freq_frame,
 #     text="par seconde",
