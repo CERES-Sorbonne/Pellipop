@@ -41,6 +41,8 @@ class Pellipop:
             retranscrire: bool = False,
             csv: bool = False,
             only_text: bool = False,
+            reduce: int = -1,
+            offset: int = 0,
 
             on_progress: callable = None,
 
@@ -74,6 +76,9 @@ class Pellipop:
         self.fichiers = sorted(file_finder(self.input_folder), key=lambda x: x.name)
         self.fichiers_stems = [f.stem for f in self.fichiers]
         self.hm = len(self.fichiers)
+
+        self.reduce = reduce
+        self.offset = offset
 
     def launch(self) -> Optional[Path]:
         exec_dir = Path(__file__).parent
@@ -141,6 +146,7 @@ class Pellipop:
         command = command.replace("$FREQ", str(frequence))
 
         for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
+            prefix = self.get_reduced_prefix(fichier.stem)
             output_folder = self.outputs["image"] / fichier.stem.replace(' ', '_')
             if output_folder.exists():
                 for img in output_folder.iterdir():
@@ -236,6 +242,13 @@ class Pellipop:
         time_end = self.ending_time.findall(end)[0]
         timespan = f"{time_start}_to_{time_end}"
         return start.replace(time_start, timespan)
+    @staticmethod
+    def get_reduced_prefix(self, prefix: str) -> str:
+        if self.reduce or self.offset:
+            offset = min(self.offset, len(prefix) - 1)
+            reduce = max(self.reduce, len(prefix) - 1) if self.reduce != -1 else self.reduce
+            prefix = prefix[offset:reduce]
+        return prefix
 
     def extract_text(self) -> Optional[Path]:
         self.outputs["text"] = self.output_folder / "text"
@@ -310,7 +323,7 @@ if __name__ == "__main__":
         decouper=True,
         retranscrire=True,
         csv=True,
-        only_text=True,
+        only_text=False,
         keep_audio=True,
     )
     p.launch()
