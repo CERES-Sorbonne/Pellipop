@@ -74,7 +74,7 @@ class Pellipop:
         }
 
         self.fichiers = sorted(file_finder(self.input_folder), key=lambda x: x.name)
-        self.fichiers_stems = [f.stem for f in self.fichiers]
+        self.fichiers_stems = {f.stem for f in self.fichiers}
         self.hm = len(self.fichiers)
 
         self.reduce = reduce
@@ -242,7 +242,30 @@ class Pellipop:
         time_end = self.ending_time.findall(end)[0]
         timespan = f"{time_start}_to_{time_end}"
         return start.replace(time_start, timespan)
+
     @staticmethod
+    def parse_back_time(time: str) -> int:
+        heures, minutes, secondes = time.split("_")
+        return int(heures[:-1]) * 3600 + int(minutes[:-1]) * 60 + int(secondes[:-1])
+
+    def parse_back_timespan(self, timespan: str) -> tuple[int, int]:
+        start, end = self.ending_time.findall(timespan)
+        start, end = (start, end) if start < end else (end, start)  # Never know with regexes
+        return self.parse_back_time(start), self.parse_back_time(end)
+
+    def parse_back_timespan_file(self, timespan: str) -> tuple[int, int]:
+        start, end = self.ending_time.findall(timespan)
+        start, end = (start, end) if start < end else (end, start)  # Never know with regexes
+        return self.parse_back_time(start), self.parse_back_time(end)
+
+    @staticmethod
+    def json_time_to_int(start: float, end: float) -> tuple[int, int]:
+        return floor(start), ceil(end)
+
+    def find_text(self, json_file: dict, start: int, end: int) -> str:
+        return "\n\n".join(
+            [x["text"] for x in json_file["segments"] if start <= x["start"] <= end or start <= x["end"] <= end])
+
     def get_reduced_prefix(self, prefix: str) -> str:
         if self.reduce or self.offset:
             offset = min(self.offset, len(prefix) - 1)
