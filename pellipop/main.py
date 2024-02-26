@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+from math import ceil, floor
 from pathlib import Path
 from typing import Optional
 
@@ -170,6 +171,8 @@ class Pellipop:
                 self.from_frame_to_time(fichier.stem, fps)
             else:
                 self.from_frame_to_time(fichier.stem)
+
+            self._from_time_to_timespan_folder(output_folder)
 
         return self.outputs["image"], self.outputs["audio"]
 
