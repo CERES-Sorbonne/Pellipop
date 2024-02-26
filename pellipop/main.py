@@ -191,6 +191,7 @@ class Pellipop:
 
     def from_frame_to_time(self, video_stem: str, fps: int = 0):
         lst_img = sorted((self.outputs["image"] / video_stem).glob("*.jpg"))
+        # lst_img += lst_img[-1],  # Add the last image to the list to have a duration for the last image
 
         if self.delete_duplicates:
             rename_func = self._ftt_no_duplicates
@@ -304,7 +305,8 @@ class Pellipop:
 
         if not self.keep_audio:
             for audio in self.outputs["audio"].glob("*"):
-                audio.unlink()
+                audio.unlink()            # self.from_time_to_timespan()
+
             self.outputs["audio"].rmdir()
         else:
             self.outputs["audio"] = None
@@ -312,7 +314,26 @@ class Pellipop:
         return self.outputs["text"]
 
     def create_csv(self):
-        pass
+        images = list(file_finder(self.outputs["image"], file_type="image", only_stems=self.fichiers_stems))
+        texts = list(file_finder(self.outputs["text"], file_type="json", only_stems=self.fichiers_stems))
+
+        csv = self.output_folder / "csv"
+        csv.mkdir(parents=True, exist_ok=True)
+
+        self.outputs["csv"] = csv
+
+        text_to_img = {txt: [img for img in images if img.stem.startswith(txt.stem)] for txt in texts}
+
+        for txt, imgs in text_to_img.items():
+            with (csv / txt.with_suffix(".csv").name).open(mode="w", encoding="utf-8") as f:
+                json_file = json.loads((self.outputs["text"] / txt).read_text(encoding="utf-8"))
+                f.write("img,start,end,text\n")
+                for img in imgs:
+                    start, end = self.parse_back_timespan_file(img.stem)
+                    text = self.find_text(json_file, start, end)
+                    f.write(f'{img},{start},{end},"{text}"\n')
+
+        return csv
 
     def _only_text(self):
         """Go from json to txt"""
@@ -338,7 +359,6 @@ class Pellipop:
 if __name__ == "__main__":
     # testdir = "/home/marceau/PycharmProjects/tksel/videos-collecte1"
     testdir = "/home/marceau/Téléchargements/pelli/"
-
     print(how_many_files(testdir))
 
     p = Pellipop(
@@ -353,4 +373,20 @@ if __name__ == "__main__":
         keep_audio=True,
     )
     p.launch()
+
+    ## Csv only test
+    # p.output_folder = Path("/home/marceau/Documents/Pellipop")
+    # videos = list(file_finder(testdir, file_type="video"))
+    # videos_stems = {v.stem for v in videos}
+    # p.fichiers_stems = videos_stems
+    #
+    # p.outputs["image"] = Path("/home/marceau/Documents/Pellipop/image")
+    # p.outputs["audio"] = Path("/home/marceau/Documents/Pellipop/audio")
+    # p.outputs["text"] = Path("/home/marceau/Documents/Pellipop/text")
+    #
+    # a =list(file_finder(p.outputs["audio"], file_type="audio"))
+    # b =list(file_finder(p.outputs["text"], file_type="json"))
+    #
+    # p.create_csv()
+
     print(p.outputs)
