@@ -14,7 +14,6 @@ default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()
 
 class Pellipop:
     default_whisper_config = Path.home() / ".whisperrc"
-    video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
     map_parts = {
         "audio_part": "-acodec copy -vn $OUTPUT_FOLDER_AUDIO/$FILE_STEM.aac ",
         "i-frame_part": "-skip_frame nokey ",
@@ -217,8 +216,10 @@ class Pellipop:
     #         self._from_time_to_timespan_folder(folder)
 
     def _from_time_to_timespan_folder(self, folder: Path):
-        imgs = sorted(file_finder(folder, format="image"))
-        for i, img in enumerate(imgs[:1]):
+        imgs = sorted(file_finder(folder, file_type="image", only_stems=self.fichiers_stems))
+        imgs += imgs[-1],  # Add the last image to the list to have a duration for the last image
+
+        for i, img in enumerate(imgs[:-1]):
             next_img = imgs[i + 1]
             img.rename(folder / self.format_fime_span(img.name, next_img.name))
 
@@ -281,7 +282,7 @@ class Pellipop:
         if not self.outputs["text"].is_dir():
             raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
 
-        jsons = list(file_finder(self.outputs["text"], format="json"))
+        jsons = list(file_finder(self.outputs["text"], file_type="json", only_stems=self.fichiers_stems))
 
         for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
             with json_file.open(mode="r", encoding="utf-8") as f:
