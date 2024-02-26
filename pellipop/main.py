@@ -22,11 +22,13 @@ class Pellipop:
     }
 
     base = "ffmpeg -hide_banner -loglevel panic -nostdin -y "
-    # base = "ffmpeg -hide_banner -nostdin -y "
+    # base = "ffmpeg -hide_banner -nostdin -y -hwaccel cuda -hwaccel_output_format cuda "
     probe = "ffprobe -v panic -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT_FILE"
 
+    # To parse frame numbers: 000000.jpg
     ending_digits = re.compile(r"\d+$")
-    ending_time = re.compile(r"\d{2}h_\d{2}m_\d{2}s$")
+    # To parse back times: 00h_00m_00s.jpg or 00h_00m_00s or 00h_00m_00s_to_
+    ending_time = re.compile(r"(\d{2}h_\d{2}m_\d{2}s)(?:.jpg|_to_|$)")
 
     def __init__(
             self,
