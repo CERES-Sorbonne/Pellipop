@@ -81,7 +81,7 @@ jobs:
       - name: Decode ref
         id: decode_ref
         run: |
-          name=${{ needs.check.outputs.branch-name }}
+          name=${{ needs.get-tag.outputs.branch-name }}
           echo "Encoded ref is $name"
           name=$(echo $name | base64 -d)
           echo "Decoded ref is $name"
