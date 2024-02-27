@@ -75,13 +75,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     needs:
-        - get-tag
         - get-ref
+        - get-tag
     steps:
       - name: Decode ref
         id: decode_ref
         run: |
-          name=${{ needs.get-tag.outputs.branch-name }}
+          name=${{ needs.get-ref.outputs.branch-name }}
           echo "Encoded ref is $name"
           name=$(echo $name | base64 -d)
           echo "Decoded ref is $name"
