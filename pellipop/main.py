@@ -313,7 +313,13 @@ class Pellipop:
 
         return self.outputs["text"]
 
-    def create_csv(self):
+    def create_csv(self) -> Optional[Path]:
+        if self.retranscrire:
+            return self._create_csv_with_text()
+        else:
+            return self._create_csv_without_text()
+
+    def _create_csv_with_text(self):
         assert self.outputs["image"] is not None and self.outputs["text"] is not None, (
             "Erreur de découpage ou d'extraction de texte, "
             "cette méthode doit s'exécuter après le découpage et l'extraction de texte !"
@@ -336,6 +342,29 @@ class Pellipop:
                     start, end = self.parse_back_timespan_file(img.stem)
                     text = self.find_text(json_file, start, end)
                     f.write(f'{img},{start},{end},"{text}"\n')
+
+        return csv
+
+    def _create_csv_without_text(self):
+        assert self.outputs["image"] is not None, (
+            "Erreur de découpage, "
+            "cette méthode doit s'exécuter après le découpage !"
+        )
+        images = list(file_finder(self.outputs["image"], file_type="image", only_stems=self.fichiers_stems))
+
+        csv = self.output_folder / "csv"
+        csv.mkdir(parents=True, exist_ok=True)
+
+        self.outputs["csv"] = csv
+
+        imgs_by_stem = {stem: [img for img in images if img.stem.startswith(stem)] for stem in self.fichiers_stems}
+
+        for stem, imgs in imgs_by_stem.items():
+            with (csv / (stem + ".csv")).open(mode="w", encoding="utf-8") as f:
+                f.write("img,start,end\n")
+                for img in imgs:
+                    start, end = self.parse_back_timespan_file(img.stem)
+                    f.write(f'{img},{start},{end}\n')
 
         return csv
 
