@@ -114,7 +114,7 @@ jobs:
         run: |
           TAG=${{ needs.get-tag.outputs.tag }}
           echo "TAG=$TAG"
-          hatch version $TAG && echo "Version set to $TAG" || echo "Version already exists"; exit 1
+          hatch version $TAG && echo "Version set to $TAG" || echo "Version already exists" && exit 1
 
       - name: Build package
         run: |
