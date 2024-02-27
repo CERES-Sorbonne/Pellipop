@@ -268,7 +268,8 @@ class Pellipop:
 
     def find_text(self, json_file: dict, start: int, end: int) -> str:
         return "\n\n".join(
-            [x["text"] for x in json_file["segments"] if start <= x["start"] <= end or start <= x["end"] <= end])
+            [x["text"].strip() for x in json_file["segments"] if start <= x["start"] <= end or start <= x["end"] <= end]
+        )
 
     def get_reduced_prefix(self, prefix: str) -> str:
         if self.reduce or self.offset:
