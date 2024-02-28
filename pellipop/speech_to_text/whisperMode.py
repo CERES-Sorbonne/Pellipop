@@ -5,6 +5,7 @@ from pathlib import Path
 from tqdm.auto import tqdm
 from whisper_client.main import WhisperClient, Mode
 
+from pellipop.Video import Video
 from pellipop.file_finder import file_finder
 
 
@@ -95,8 +96,7 @@ def toTextFolder(
         print("The audio folder does not exist")
         sys.exit(1)
 
-    if not textPath.exists():
-        textPath.mkdir(parents=True)
+    textPath.mkdir(parents=True, exist_ok=True)
 
     if not wc:
         wc = WhisperClient(
@@ -111,10 +111,13 @@ def toTextFolder(
         toText(config_data, audio, text, wc=wc, mode=mode)
 
 
+
 def main(
         config_data: str | dict | Path,
-        audioPath: str | Path,
-        textPath: str | Path,
+        *args,
+        videos: Video | list[Video] = None,
+        audioPath: str | Path | list[str | Path] = None,
+        textPath: str | Path | list[str | Path] = None,
         wc: WhisperClient = None,
         mode: Mode | str = Mode.full,
         folder: bool = False,
@@ -132,16 +135,28 @@ def main(
 
     if isinstance(audioPath, str):
         audioPath = Path(audioPath)
+    elif isinstance(audioPath, Path):
+        pass
+    elif isinstance(audioPath, list):
+        audioPath = [Path(audio) for audio in audioPath]
+    elif audioPath is None:
+        assert videos is not None, "ERROR : videos is None and audioPath is None"
+    else:
+        raise TypeError(f"ERROR : invalid type for audioPath : {type(audioPath)}")
+
     if isinstance(textPath, str):
         textPath = Path(textPath)
+        textPath.mkdir(parents=True, exist_ok=True)
+    elif isinstance(textPath, Path):
+        textPath.mkdir(parents=True, exist_ok=True)
+    elif isinstance(textPath, list):
+        textPath = [Path(text) for text in textPath]
+    elif textPath is None:
+        assert videos is not None, "ERROR : videos is None and textPath is None"
+    else:
+        raise TypeError(f"ERROR : invalid type for textPath : {type(textPath)}")
 
-    if not audioPath.exists():
-        try:
-            audioPath.mkdir(parents=True)
-        except:
-            raise
-
-    rm_tree(textPath)
+    # rm_tree(textPath)
 
     if isinstance(mode, str):
         mode = Mode(mode)
@@ -151,7 +166,14 @@ def main(
             **config_data
         )
 
-    if folder:
+    if videos:
+        for video in videos:
+            toText(config_data, video.audio, video.json_or_text, wc=wc, mode=mode)
+    elif isinstance(audioPath, list):
+        assert isinstance(textPath, list), "ERROR : audioPath is a list but textPath is not"
+        for audio, text in zip(audioPath, textPath):
+            toText(config_data, audio, text, wc=wc, mode=mode)
+    elif folder:
         toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode)
     else:
         toText(config_data, audioPath, textPath, wc=wc, mode=mode)
@@ -160,8 +182,8 @@ def main(
 if __name__ == "__main__":
     main(
         config_data,
-        "/home/marceau/PycharmProjects/Pellipop/videos-collecte1/extracted_audio",
-        "/home/marceau/PycharmProjects/Pellipop/txt-collecte1",
+        audioPath="/home/marceau/PycharmProjects/Pellipop/videos-collecte1/extracted_audio",
+        textPath="/home/marceau/PycharmProjects/Pellipop/txt-collecte1",
         mode=Mode.text,
         folder=True
     )
