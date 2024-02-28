@@ -25,7 +25,21 @@ class Pellipop:
 
     base = "ffmpeg -hide_banner -loglevel panic -nostdin -y "
     # base = "ffmpeg -hide_banner -nostdin -y -hwaccel cuda -hwaccel_output_format cuda "
+
+    ## To get the fps of a video file (we now use the Video class) which is doing only one call to ffprobe
     # probe = "ffprobe -v panic -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT_FILE"
+    # def get_fps(self, video: str | Path) -> int:
+    #     command_instance = self.probe.replace("$INPUT_FILE", str(video))
+    #     # print(command_instance)
+    #     result = subprocess.run(command_instance, shell=True, capture_output=True)
+    #     # print(result)
+    #     result = result.stdout.decode("utf-8").strip().split("/")
+    #     if len(result) == 2:
+    #         return int(result[0]) // int(result[1])
+    #     elif len(result) == 1:
+    #         return int(result[0])
+    #     else:
+    #         raise ValueError("La commande n'a pas retourné un résultat valide")
 
     # To parse frame numbers: 000000.jpg
     ending_digits = re.compile(r"\d+$")
@@ -47,7 +61,7 @@ class Pellipop:
             offset: int = 0,
             parents_in_name: int = 0,
 
-            on_progress: callable = None,
+            on_progress: callable = None,  # TODO: Add a progress bar
 
             whisper_config: dict = None,
             keep_audio: bool = False,
@@ -156,6 +170,7 @@ class Pellipop:
         for video in tqdm(self.videos, desc="Découpage des vidéos", unit=" vidéos", total=self.hm):
             fichier = video.path
             output_folder = self.outputs["image"] / fichier.stem.replace(' ', '_')
+            video.image_folder = output_folder
             if output_folder.exists():
                 for img in output_folder.iterdir():
                     img.unlink()
@@ -173,7 +188,7 @@ class Pellipop:
             # print(commmand_instance)
             subprocess.run(commmand_instance, shell=True)
 
-            video.audio = self.outputs["audio"] / f"{video.stem}.aac"
+            video.audio = self.outputs["audio"] / video.with_suffix(".aac").name if self.retranscrire else None
 
             if self.delete_duplicates:
                 # fps = self.get_fps(fichier)
@@ -185,21 +200,8 @@ class Pellipop:
 
         return self.outputs["image"], self.outputs["audio"]
 
-    # def get_fps(self, video: str | Path) -> int:
-    #     command_instance = self.probe.replace("$INPUT_FILE", str(video))
-    #     # print(command_instance)
-    #     result = subprocess.run(command_instance, shell=True, capture_output=True)
-    #     # print(result)
-    #     result = result.stdout.decode("utf-8").strip().split("/")
-    #     if len(result) == 2:
-    #         return int(result[0]) // int(result[1])
-    #     elif len(result) == 1:
-    #         return int(result[0])
-    #     else:
-    #         raise ValueError("La commande n'a pas retourné un résultat valide")
-
     def from_frame_to_time(self, video: Video, fps: int = 0):
-        lst_img = sorted((self.outputs["image"] / video.stem).glob("*.jpg"))
+        lst_img = sorted(video.image_folder.glob("*.jpg"))
         # lst_img += lst_img[-1],  # Add the last image to the list to have a duration for the last image
 
         if self.delete_duplicates:
@@ -214,7 +216,7 @@ class Pellipop:
             img.rename(new_img)
             pass
 
-        video.images = sorted((self.outputs["image"] / video.stem).glob("*.jpg"))
+        video.images = sorted(video.image_folder.glob("*.jpg"))
 
     def _ftt_no_duplicates(self, img: Path, fps: int) -> Path:
         frame_number = int(self.ending_digits.findall(img.stem)[0])
@@ -228,16 +230,6 @@ class Pellipop:
         new_name = time.join(img.name.rsplit(str(frame_number), 1))
         return img.with_name(new_name)
 
-    # def from_time_to_timespan(self):
-    #     imgs = self.outputs["image"]
-    #     assert imgs is not None and imgs.exists(), ("Erreur de découpage, "
-    #                                                 "cette méthode doit s'exécuter après le découpage !")
-    #
-    #     for folder in imgs.iterdir():
-    #         if folder.name not in self.fichiers_stems:
-    #             continue
-    #         self._from_time_to_timespan_folder(folder)
-
     def _from_time_to_timespan_folder(self, video: Video):
         # imgs = sorted(file_finder(folder, file_type="image", only_stems=self.fichiers_stems))
         imgs = video.images
@@ -247,7 +239,7 @@ class Pellipop:
             next_img = imgs[i + 1]
             img.rename(img.parent / self.format_fime_span(img.name, next_img.name))
 
-        video.images = sorted((self.outputs["image"] / video.stem).glob("*.jpg"))
+        video.images = sorted(video.image_folder.glob("*.jpg"))
 
     @staticmethod
     def format_time(frame: int) -> str:
@@ -296,13 +288,15 @@ class Pellipop:
         self.outputs["text"] = self.output_folder / "text"
         self.outputs["text"].mkdir(parents=True, exist_ok=True)
 
+        for video in self.videos:
+            video.json = self.outputs["text"] / video.with_suffix(".json").name
+
         print("Extraction du texte")
         if self.whisper_config is not None or self.default_whisper_config.exists():
             try:
                 whisperMode.main(
                     self.whisper_config or self.default_whisper_config,
-                    self.outputs["audio"],
-                    self.outputs["text"],
+                    videos=self.videos,
                     mode="full",
                     folder=True,
                 )
@@ -319,7 +313,6 @@ class Pellipop:
         print("Extraction du texte terminée !")
 
         for video in self.videos:
-            video.json = self.outputs["text"] / f"{video.stem}.json"
             video.audio = video.audio if self.keep_audio else None
 
         if not self.keep_audio:
@@ -391,6 +384,7 @@ class Pellipop:
                 f.write(data["text"])
 
             video.json.unlink()
+            video.json = None
 
     def final_names(self):
         for video in self.videos:
@@ -410,11 +404,11 @@ if __name__ == "__main__":
         decouper=True,
         retranscrire=True,
         csv=True,
-        only_text=False,
+        only_text=True,
         keep_audio=True,
 
         reduce=10,
-        offset=0,
+        offset=5,
         parents_in_name=2,
     )
     p.launch()
