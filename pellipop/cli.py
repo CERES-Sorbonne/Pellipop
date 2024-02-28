@@ -34,10 +34,20 @@ parser.add_argument(
     help="Permet de ne pas extraire le texte des vidéos"
 )
 parser.add_argument(
-    "--hamming", type=int, default=10,
-    help="Distance de Hamming pour l'algorithme de comparaison de hash"
+    "--reduce", type=int, default=-1,
+    help="Permet de réduire le nom des fichiers de sortie à un certain nombre de caractères du nom original"
+         "(par défaut, -1 pour ne pas réduire)"
 )
-
+parser.add_argument(
+    "--offset", type=int, default=0,
+    help="Permet de décaler le début du nom des fichiers de sortie de n caractères"
+         "(par défaut, 0 pour ne pas décaler)"
+)
+parser.add_argument(
+    "--parents-in-name", type=int, default=0,
+    help="Permet d'ajouter le nom des dossiers parents dans le nom des fichiers de sortie"
+         ",séparés par des _ (par défaut, 0 pour ne pas ajouter)"
+)
 parser.add_argument(
     "-g", "--gui", type=bool, default=False, nargs='?', const=True,
     help="Permet d'utiliser l'interface graphique"
@@ -63,7 +73,10 @@ def main(args=args):
 
         whisper_config=args.whisper_config,
         keep_audio=args.keep_audio,
-        hamming=args.hamming
+
+        reduce=args.reduce,
+        offset=args.offset,
+        parents_in_name=args.parents_in_name
     )
     pellipop.launch()
 
