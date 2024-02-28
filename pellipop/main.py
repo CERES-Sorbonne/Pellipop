@@ -121,7 +121,6 @@ class Pellipop:
         self.decouper_et_audio()
 
         if self.retranscrire:
-            # self.from_time_to_timespan()
             self.extract_text()
 
         if self.csv:
@@ -312,15 +311,10 @@ class Pellipop:
 
         print("Extraction du texte terminée !")
 
-        for video in self.videos:
-            video.audio = video.audio if self.keep_audio else None
-
         if not self.keep_audio:
-            for audio in self.outputs["audio"].glob("*"):
-                audio.unlink()  # self.from_time_to_timespan()
-
-            self.outputs["audio"].rmdir()
-        else:
+            for video in self.videos:
+                video.audio.unlink()
+                video.audio = None
             self.outputs["audio"] = None
 
         return self.outputs["text"]
