@@ -96,22 +96,22 @@ class Video:
         self.channels = int(audio["channels"])
         self.rate = int(audio["sample_rate"])
 
-    def do_reduce(self, path: Path) -> Path:
+    def rename_to_final(self, path: Path) -> Path:
         if not self.final_stem:
             return path
         return path.rename(path.with_stem(path.stem.replace(self.stem, self.final_stem)))
 
-    def reduce_all(self):
-        self.images = [self.do_reduce(img) for img in self.images]
+    def final_names(self):
+        self.images = [self.rename_to_final(img) for img in self.images]
 
         if self.audio:
-            self.audio = self.do_reduce(self.audio)
+            self.audio = self.rename_to_final(self.audio)
 
         if self.text:
-            self.text = self.do_reduce(self.text)
+            self.text = self.rename_to_final(self.text)
 
         if self.csv:
-            self.csv = self.do_reduce(self.csv)
+            self.csv = self.rename_to_final(self.csv)
 
 
 if __name__ == "__main__":

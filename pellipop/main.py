@@ -7,6 +7,7 @@ from typing import Optional
 
 from tqdm.auto import tqdm
 
+from pellipop.Video import Video
 from pellipop.file_finder import file_finder, how_many_files
 from pellipop.speech_to_text import extractText, whisperMode
 
@@ -24,7 +25,7 @@ class Pellipop:
 
     base = "ffmpeg -hide_banner -loglevel panic -nostdin -y "
     # base = "ffmpeg -hide_banner -nostdin -y -hwaccel cuda -hwaccel_output_format cuda "
-    probe = "ffprobe -v panic -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT_FILE"
+    # probe = "ffprobe -v panic -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT_FILE"
 
     # To parse frame numbers: 000000.jpg
     ending_digits = re.compile(r"\d+$")
@@ -44,6 +45,7 @@ class Pellipop:
             only_text: bool = False,
             reduce: int = -1,
             offset: int = 0,
+            parents_in_name: int = 0,
 
             on_progress: callable = None,
 
@@ -81,6 +83,8 @@ class Pellipop:
         self.reduce = reduce
         self.offset = offset
 
+        self.videos = [Video(f, reduce=reduce, offset=offset, parents_in_name=parents_in_name) for f in self.fichiers]
+
     def launch(self) -> Optional[Path]:
         exec_dir = Path(__file__).parent
         print(exec_dir)
@@ -112,6 +116,8 @@ class Pellipop:
 
         if self.only_text:
             self._only_text()
+
+        self.final_names()
 
         self.completed = True
 
@@ -146,8 +152,9 @@ class Pellipop:
 
         command = command.replace("$FREQ", str(frequence))
 
-        for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
-            prefix = self.get_reduced_prefix(fichier.stem)
+        # for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
+        for video in tqdm(self.videos, desc="Découpage des vidéos", unit=" vidéos", total=self.hm):
+            fichier = video.path
             output_folder = self.outputs["image"] / fichier.stem.replace(' ', '_')
             if output_folder.exists():
                 for img in output_folder.iterdir():
@@ -166,31 +173,33 @@ class Pellipop:
             # print(commmand_instance)
             subprocess.run(commmand_instance, shell=True)
 
-            if self.delete_duplicates:
-                fps = self.get_fps(fichier)
-                self.from_frame_to_time(fichier.stem, fps)
-            else:
-                self.from_frame_to_time(fichier.stem)
+            video.audio = self.outputs["audio"] / f"{video.stem}.aac"
 
-            self._from_time_to_timespan_folder(output_folder)
+            if self.delete_duplicates:
+                # fps = self.get_fps(fichier)
+                self.from_frame_to_time(video, video.fps)
+            else:
+                self.from_frame_to_time(video)
+
+            self._from_time_to_timespan_folder(video)
 
         return self.outputs["image"], self.outputs["audio"]
 
-    def get_fps(self, video: str | Path) -> int:
-        command_instance = self.probe.replace("$INPUT_FILE", str(video))
-        # print(command_instance)
-        result = subprocess.run(command_instance, shell=True, capture_output=True)
-        # print(result)
-        result = result.stdout.decode("utf-8").strip().split("/")
-        if len(result) == 2:
-            return int(result[0]) // int(result[1])
-        elif len(result) == 1:
-            return int(result[0])
-        else:
-            raise ValueError("La commande n'a pas retourné un résultat valide")
+    # def get_fps(self, video: str | Path) -> int:
+    #     command_instance = self.probe.replace("$INPUT_FILE", str(video))
+    #     # print(command_instance)
+    #     result = subprocess.run(command_instance, shell=True, capture_output=True)
+    #     # print(result)
+    #     result = result.stdout.decode("utf-8").strip().split("/")
+    #     if len(result) == 2:
+    #         return int(result[0]) // int(result[1])
+    #     elif len(result) == 1:
+    #         return int(result[0])
+    #     else:
+    #         raise ValueError("La commande n'a pas retourné un résultat valide")
 
-    def from_frame_to_time(self, video_stem: str, fps: int = 0):
-        lst_img = sorted((self.outputs["image"] / video_stem).glob("*.jpg"))
+    def from_frame_to_time(self, video: Video, fps: int = 0):
+        lst_img = sorted((self.outputs["image"] / video.stem).glob("*.jpg"))
         # lst_img += lst_img[-1],  # Add the last image to the list to have a duration for the last image
 
         if self.delete_duplicates:
@@ -204,6 +213,8 @@ class Pellipop:
                 print(f"Collision détectée: {img.name} -> {new_img.name}")
             img.rename(new_img)
             pass
+
+        video.images = sorted((self.outputs["image"] / video.stem).glob("*.jpg"))
 
     def _ftt_no_duplicates(self, img: Path, fps: int) -> Path:
         frame_number = int(self.ending_digits.findall(img.stem)[0])
@@ -227,13 +238,16 @@ class Pellipop:
     #             continue
     #         self._from_time_to_timespan_folder(folder)
 
-    def _from_time_to_timespan_folder(self, folder: Path):
-        imgs = sorted(file_finder(folder, file_type="image", only_stems=self.fichiers_stems))
+    def _from_time_to_timespan_folder(self, video: Video):
+        # imgs = sorted(file_finder(folder, file_type="image", only_stems=self.fichiers_stems))
+        imgs = video.images
         imgs += imgs[-1],  # Add the last image to the list to have a duration for the last image
 
         for i, img in enumerate(imgs[:-1]):
             next_img = imgs[i + 1]
-            img.rename(folder / self.format_fime_span(img.name, next_img.name))
+            img.rename(img.parent / self.format_fime_span(img.name, next_img.name))
+
+        video.images = sorted((self.outputs["image"] / video.stem).glob("*.jpg"))
 
     @staticmethod
     def format_time(frame: int) -> str:
@@ -272,7 +286,7 @@ class Pellipop:
         )
 
     def get_reduced_prefix(self, prefix: str) -> str:
-        if self.reduce or self.offset:
+        if self.reduce != -1 or self.offset:
             offset = min(self.offset, len(prefix) - 1)
             reduce = max(self.reduce, len(prefix) - 1) if self.reduce != -1 else self.reduce
             prefix = prefix[offset:reduce]
@@ -304,9 +318,13 @@ class Pellipop:
 
         print("Extraction du texte terminée !")
 
+        for video in self.videos:
+            video.json = self.outputs["text"] / f"{video.stem}.json"
+            video.audio = video.audio if self.keep_audio else None
+
         if not self.keep_audio:
             for audio in self.outputs["audio"].glob("*"):
-                audio.unlink()            # self.from_time_to_timespan()
+                audio.unlink()  # self.from_time_to_timespan()
 
             self.outputs["audio"].rmdir()
         else:
@@ -315,59 +333,44 @@ class Pellipop:
         return self.outputs["text"]
 
     def create_csv(self) -> Optional[Path]:
+        csv = self.output_folder / "csv"
+        csv.mkdir(parents=True, exist_ok=True)
+        self.outputs["csv"] = csv
+
         if self.retranscrire:
-            return self._create_csv_with_text()
+            self._create_csv_with_text()
         else:
-            return self._create_csv_without_text()
+            self._create_csv_without_text()
+
+        return csv
 
     def _create_csv_with_text(self):
         assert self.outputs["image"] is not None and self.outputs["text"] is not None, (
             "Erreur de découpage ou d'extraction de texte, "
             "cette méthode doit s'exécuter après le découpage et l'extraction de texte !"
         )
-        images = list(file_finder(self.outputs["image"], file_type="image", only_stems=self.fichiers_stems))
-        texts = list(file_finder(self.outputs["text"], file_type="json", only_stems=self.fichiers_stems))
-
-        csv = self.output_folder / "csv"
-        csv.mkdir(parents=True, exist_ok=True)
-
-        self.outputs["csv"] = csv
-
-        text_to_img = {txt: [img for img in images if img.stem.startswith(txt.stem)] for txt in texts}
-
-        for txt, imgs in text_to_img.items():
-            with (csv / txt.with_suffix(".csv").name).open(mode="w", encoding="utf-8") as f:
-                json_file = json.loads((self.outputs["text"] / txt).read_text(encoding="utf-8"))
+        for video in self.videos:
+            video.csv = self.outputs["csv"] / video.with_suffix(".csv").name
+            with video.csv.open(mode="w", encoding="utf-8") as f:
+                json_file = json.loads(video.json.read_text(encoding="utf-8"))
                 f.write("img,start,end,text\n")
-                for img in imgs:
+                for img in video.images:
                     start, end = self.parse_back_timespan_file(img.stem)
                     text = self.find_text(json_file, start, end)
                     f.write(f'{img},{start},{end},"{text}"\n')
-
-        return csv
 
     def _create_csv_without_text(self):
         assert self.outputs["image"] is not None, (
             "Erreur de découpage, "
             "cette méthode doit s'exécuter après le découpage !"
         )
-        images = list(file_finder(self.outputs["image"], file_type="image", only_stems=self.fichiers_stems))
-
-        csv = self.output_folder / "csv"
-        csv.mkdir(parents=True, exist_ok=True)
-
-        self.outputs["csv"] = csv
-
-        imgs_by_stem = {stem: [img for img in images if img.stem.startswith(stem)] for stem in self.fichiers_stems}
-
-        for stem, imgs in imgs_by_stem.items():
-            with (csv / (stem + ".csv")).open(mode="w", encoding="utf-8") as f:
+        for video in self.videos:
+            video.csv = self.outputs["csv"] / video.with_suffix(".csv").name
+            with video.csv.open(mode="w", encoding="utf-8") as f:
                 f.write("img,start,end\n")
-                for img in imgs:
+                for img in video.images:
                     start, end = self.parse_back_timespan_file(img.stem)
                     f.write(f'{img},{start},{end}\n')
-
-        return csv
 
     def _only_text(self):
         """Go from json to txt"""
@@ -378,16 +381,20 @@ class Pellipop:
         if not self.outputs["text"].is_dir():
             raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
 
-        jsons = list(file_finder(self.outputs["text"], file_type="json", only_stems=self.fichiers_stems))
+        for video in self.videos:
+            video.text = video.json.with_suffix(".txt")
 
-        for json_file in tqdm(jsons, desc="Conversion des fichiers json en txt", unit="fichier", total=len(jsons)):
-            with json_file.open(mode="r", encoding="utf-8") as f:
+            with video.json.open(mode="r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            with json_file.with_suffix(".txt").open(mode="w", encoding="utf-8") as f:
+            with video.text.open(mode="w", encoding="utf-8") as f:
                 f.write(data["text"])
 
-            json_file.unlink()
+            video.json.unlink()
+
+    def final_names(self):
+        for video in self.videos:
+            video.final_names()
 
 
 if __name__ == "__main__":
@@ -405,6 +412,10 @@ if __name__ == "__main__":
         csv=True,
         only_text=False,
         keep_audio=True,
+
+        reduce=10,
+        offset=0,
+        parents_in_name=2,
     )
     p.launch()
 
