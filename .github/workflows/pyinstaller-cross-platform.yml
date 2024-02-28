@@ -309,7 +309,7 @@ jobs:
                 echo "Auto-generated release for the tag ${{ needs.envs.outputs.tag }}" >> release.md
                 TAG_MESSAGE=${{ needs.envs.outputs.tag_message }}
                 TAG_MESSAGE=$(echo $TAG_MESSAGE | base64 -d)
-                echo "Tag message: $TAG_MESSAGE" >> release.md
+                echo "Tag message: \`$TAG_MESSAGE\`" >> release.md
             fi
             message=${{ needs.envs.outputs.message }}
             message=$(echo $message | base64 -d)
