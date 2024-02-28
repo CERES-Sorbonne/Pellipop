@@ -65,7 +65,10 @@ class Video:
     def stem(self, value) -> None:
         self.path = self.path.with_stem(value)
 
-    def with_suffix(self, *args, **kwargs):
+    @property
+    def json_or_text(self) -> Path:
+        return self.json or self.text
+
     def with_suffix(self, *args, **kwargs) -> Path:
         return self.path.with_suffix(*args, **kwargs)
 
