@@ -112,9 +112,17 @@ class Video:
             path = path.rename(new_folder / path.name)
         return path
 
-    def final_names(self):
-        self.images = [self.rename_to_final(img) for img in self.images]
+    def rename_to_final_images(self) -> None:
+        old_folder = self.image_folder
+        # self.image_folder = self.image_folder.rename(self.image_folder.with_name(self.final_stem.replace(" ", "_")))
+        self.image_folder = self.image_folder.parent / self.final_stem.replace(" ", "_")
+        self.image_folder.mkdir(parents=True, exist_ok=True)
+        self.images = [self.rename_to_final(img, old_folder=old_folder, new_folder=self.image_folder) for img in self.images]
+        old_folder.rmdir()
+
     def final_names(self) -> None:
+        if self.images:
+            self.rename_to_final_images()
 
         if self.audio:
             self.audio = self.rename_to_final(self.audio)
