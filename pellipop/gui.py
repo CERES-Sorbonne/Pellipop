@@ -5,8 +5,8 @@ from tkinter import filedialog
 
 import ttkbootstrap as ttk
 
-from pellipop.main import Pellipop, default_output_path
 from pellipop.file_finder import how_many_files
+from pellipop.main import Pellipop, default_output_path
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 
@@ -119,7 +119,7 @@ def validate_freq():
 
 
 def validate_prefix():
-    return validatepositiveint(prefix_length)
+    return validatepositiveint(reduce_length)
 
 
 def validate_url():
@@ -134,8 +134,8 @@ def freq_error():
 
 
 def prefix_error():
-    prefix_entry.bell()
-    prefix_length.set("10")
+    reduce_entry.bell()
+    reduce_length.set("10")
 
 
 def import_error():
@@ -151,11 +151,32 @@ def disable_freq():
 
 def disable_prefix():
     if prefix.get():
-        prefix_entry.config(state="normal", cursor="xterm")
-        prefix_label.config(foreground="black", cursor="arrow")
+        reduce_entry.config(state="normal", cursor="xterm")
+        reduce_label.config(foreground="black", cursor="arrow")
+
+        offset_entry.config(state="normal", cursor="xterm")
+        offset_label.config(foreground="black", cursor="arrow")
+
+        parents_entry.config(state="normal", cursor="xterm")
+        parents_label.config(foreground="black", cursor="arrow")
+
     else:
-        prefix_entry.config(state="disabled", cursor="X_cursor")
-        prefix_label.config(foreground="grey", cursor="X_cursor")
+        reduce_entry.config(state="disabled", cursor="X_cursor")
+        reduce_label.config(foreground="grey", cursor="X_cursor")
+
+        offset_entry.config(state="disabled", cursor="X_cursor")
+        offset_label.config(foreground="grey", cursor="X_cursor")
+
+        parents_entry.config(state="disabled", cursor="X_cursor")
+        parents_label.config(foreground="grey", cursor="X_cursor")
+
+def disable_retranscrire():
+    if retranscrire.get():
+        import_entry.config(state="normal", cursor="xterm")
+        import_button.config(state="normal", cursor="gumby")
+    else:
+        import_entry.config(state="disabled", cursor="X_cursor")
+        import_button.config(state="disabled", cursor="X_cursor")
 
 
 def validate():
@@ -176,6 +197,7 @@ def validate():
         return False
 
     return True
+
 
 def lancer():
     print("Lancer")
@@ -200,6 +222,9 @@ def lancer():
         "decouper": decouper.get(),
         "retranscrire": retranscrire.get(),
         "csv": csv.get(),
+        "reduce": int(reduce_length.get()),
+        "offset": int(offset_length.get()),
+        "parents_in_name": int(parents_length.get()),
     }
 
     try:
@@ -224,15 +249,16 @@ def lancer():
 
     root.focus_force()
 
+
 ## ROOT
 
 root = ttk.Window(
     "Pellipop",
     themename="journal",
     iconphoto="pellipop.ico",
-    size=(1400, 1200),
+    size=(1400, 1000),
     resizable=(True, True),
-    minsize=(950, 950),
+    minsize=(1050, 900),
 )
 
 main_frame = ttk.Frame(root, padding=10)
@@ -285,8 +311,6 @@ progress_label.grid(row=0, column=0, columnspan=6)
 progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=500, mode="determinate")
 progress_bar.grid(row=1, column=0, columnspan=6, pady=5)
 
-
-
 ## LEFT FRAME - Découper les vidéos
 left_select_frame = ttk.Frame(main_frame)
 left_select_frame.grid(row=1, column=0, sticky="s", pady=10)
@@ -317,18 +341,18 @@ mode = tk.StringVar(value="i")
 # ).grid(row=1, column=0, columnspan=3, pady=10, padx=5)
 ttk.Radiobutton(
     freq_frame,
-    text="toutes les x secondes",
-    variable=mode,
-    value="s",
-    command=disable_freq,
-).grid(row=1, column=0, columnspan=6, pady=10, padx=5)
-ttk.Radiobutton(
-    freq_frame,
     text="Découpage automatique (selon la similarité des images)",
     variable=mode,
     value="i",
     command=disable_freq,
-).grid(row=3, column=0, columnspan=6, pady=10, padx=5)
+).grid(row=1, column=0, columnspan=6, pady=10, padx=5)
+ttk.Radiobutton(
+    freq_frame,
+    text="toutes les x secondes",
+    variable=mode,
+    value="s",
+    command=disable_freq,
+).grid(row=2, column=0, columnspan=3, pady=10, padx=5)
 freq_int = tk.StringVar(value="5")
 freq_entry = ttk.Entry(
     freq_frame,
@@ -340,28 +364,52 @@ freq_entry = ttk.Entry(
     cursor="xterm",
 
 )
-freq_entry.grid(row=2, column=0, columnspan=6, pady=5)  # /!\ BEFORE the second radiobutton
+freq_entry.grid(row=2, column=3, columnspan=3, pady=5)  # /!\ BEFORE the second radiobutton
 
 prefix_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 prefix_frame.grid(row=3, column=0)
 ttk.Label(
-    prefix_frame, text='Souhaitez-vous préfixer les images du nom de la vidéo d\'origine ?'
-).grid(row=0, column=0, columnspan=3)
-prefix = tk.BooleanVar(value=True)
+    prefix_frame, text='Souhaitez-vous changer le nom des sorties ?'
+).grid(row=0, column=0, columnspan=2)
+prefix = tk.BooleanVar(value=False)
 prefix_check = ttk.Checkbutton(prefix_frame, variable=prefix, command=disable_prefix)
-prefix_check.grid(row=0, column=3, padx=10)
-prefix_label = ttk.Label(prefix_frame, text='Longueur du préfixe')
-prefix_label.grid(row=1, column=0)
-prefix_length = tk.StringVar(value="10")
-prefix_entry = ttk.Entry(
+prefix_check.grid(row=0, column=2, padx=10)
+reduce_label = ttk.Label(prefix_frame, text='Longueur maximale du préfixe (partie tirée du nom original)')
+reduce_label.grid(row=1, column=0, rowspan=2, sticky="w")
+reduce_length = tk.StringVar(value="10")
+reduce_entry = ttk.Entry(
     prefix_frame,
-    textvariable=prefix_length,
+    textvariable=reduce_length,
     justify="right",
     validate="focusout",
     validatecommand=validate_prefix,
     invalidcommand=prefix_error,
 )
-prefix_entry.grid(row=1, column=2, pady=5)
+reduce_entry.grid(row=1, column=2, pady=5, rowspan=2)
+offset_label = ttk.Label(prefix_frame, text='Décalage du préfixe (On ne prend pas les x premiers caractères)')
+offset_label.grid(row=3, column=0, rowspan=2, sticky="w")
+offset_length = tk.StringVar(value="0")
+offset_entry = ttk.Entry(
+    prefix_frame,
+    textvariable=offset_length,
+    justify="right",
+    validate="focusout",
+    validatecommand=validatepositiveint,
+    invalidcommand=prefix_error,
+)
+offset_entry.grid(row=3, column=2, pady=5, rowspan=2)
+parents_label = ttk.Label(prefix_frame, text='Nombre de dossiers parents à inclure dans le nom')
+parents_label.grid(row=5, column=0, rowspan=2, sticky="w")
+parents_length = tk.StringVar(value="0")
+parents_entry = ttk.Entry(
+    prefix_frame,
+    textvariable=parents_length,
+    justify="right",
+    validate="focusout",
+    validatecommand=validatepositiveint,
+    invalidcommand=prefix_error,
+)
+parents_entry.grid(row=5, column=2, pady=5, rowspan=2)
 
 ## RIGHT FRAME - STT
 
@@ -373,7 +421,7 @@ ttk.Label(
     font=("Jetbrains Mono", 16, "bold")
 ).pack(side="left")
 retranscrire = tk.BooleanVar(value=False)
-retranscrire_check = ttk.Checkbutton(right_select_frame, variable=retranscrire)
+retranscrire_check = ttk.Checkbutton(right_select_frame, variable=retranscrire, command=disable_retranscrire)
 retranscrire_check.pack(side="right", padx=10)
 
 right_frame = ttk.Frame(main_frame, relief="ridge", width=main_frame.winfo_width() / 2, padding=10)
@@ -398,7 +446,6 @@ import_entry.grid(row=1, column=0, columnspan=2, sticky="ew")
 import_button = ttk.Button(import_frame, text="Importer", command=url_import, cursor="gumby")
 import_button.grid(row=1, column=2)
 
-
 ## BOTTOM FRAME - Bouton lancer
 bottom_frame = ttk.Frame(main_frame, padding=10)
 bottom_frame.grid(row=3, column=0, columnspan=2)
@@ -413,10 +460,27 @@ csv_check.grid(row=0, column=2, padx=10)
 lancer_button = ttk.Button(bottom_frame, text="Lancer", command=lancer, cursor="gumby")
 lancer_button.grid(row=1, column=0, columnspan=3, pady=10, padx=10)
 
+# Disable stuff at start
+reduce_entry.config(state="disabled", cursor="X_cursor")
+reduce_label.config(foreground="grey", cursor="X_cursor")
+
+offset_entry.config(state="disabled", cursor="X_cursor")
+offset_label.config(foreground="grey", cursor="X_cursor")
+
+parents_entry.config(state="disabled", cursor="X_cursor")
+parents_label.config(foreground="grey", cursor="X_cursor")
+
+freq_entry.config(state="disabled", cursor="X_cursor")
+
+import_entry.config(state="disabled", cursor="X_cursor")
+import_button.config(state="disabled", cursor="pirate")
+
+
 def main():
     global wu
     wu = WhisperFromUrl()
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
