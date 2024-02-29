@@ -374,9 +374,9 @@ ttk.Label(
 prefix = tk.BooleanVar(value=False)
 prefix_check = ttk.Checkbutton(prefix_frame, variable=prefix, command=disable_prefix)
 prefix_check.grid(row=0, column=2, padx=10)
-reduce_label = ttk.Label(prefix_frame, text='Longueur maximale du préfixe (partie tirée du nom original)')
-reduce_label.grid(row=1, column=0, rowspan=2, sticky="w")
-reduce_length = tk.StringVar(value="10")
+reduce_label = ttk.Label(prefix_frame, text='Longueur maximale du préfixe (-1 pour ne pas réduire)')
+reduce_label.grid(row=1, column=0, sticky="w")
+reduce_length = tk.StringVar(value="-1")
 reduce_entry = ttk.Entry(
     prefix_frame,
     textvariable=reduce_length,
@@ -386,8 +386,8 @@ reduce_entry = ttk.Entry(
     invalidcommand=prefix_error,
 )
 reduce_entry.grid(row=1, column=2, pady=5, rowspan=2)
-offset_label = ttk.Label(prefix_frame, text='Décalage du préfixe (On ne prend pas les x premiers caractères)')
-offset_label.grid(row=3, column=0, rowspan=2, sticky="w")
+offset_label = ttk.Label(prefix_frame, text='Décalage du préfixe')
+offset_label.grid(row=3, column=0, sticky="w")
 offset_length = tk.StringVar(value="0")
 offset_entry = ttk.Entry(
     prefix_frame,
