@@ -165,7 +165,6 @@ class Pellipop:
 
         command = command.replace("$FREQ", str(frequence))
 
-        # for fichier in tqdm(self.fichiers, desc="Découpage des vidéos", unit=" videos", total=self.hm):
         for video in tqdm(self.videos, desc="Découpage des vidéos", unit=" vidéos", total=self.hm):
             fichier = video.path
             output_folder = self.outputs["image"] / fichier.stem.replace(' ', '_')
@@ -184,13 +183,11 @@ class Pellipop:
                 .replace("$VIDEO_PATH", str(fichier))
             )
 
-            # print(commmand_instance)
             subprocess.run(commmand_instance, shell=True)
 
             video.audio = self.outputs["audio"] / video.with_suffix(".aac").name if self.retranscrire else None
 
             if self.delete_duplicates:
-                # fps = self.get_fps(fichier)
                 self.from_frame_to_time(video, video.fps)
             else:
                 self.from_frame_to_time(video)
@@ -201,7 +198,6 @@ class Pellipop:
 
     def from_frame_to_time(self, video: Video, fps: int = 0):
         lst_img = sorted(video.image_folder.glob("*.jpg"))
-        # lst_img += lst_img[-1],  # Add the last image to the list to have a duration for the last image
 
         if self.delete_duplicates:
             rename_func = self._ftt_no_duplicates
@@ -230,7 +226,6 @@ class Pellipop:
         return img.with_name(new_name)
 
     def _from_time_to_timespan_folder(self, video: Video):
-        # imgs = sorted(file_finder(folder, file_type="image", only_stems=self.fichiers_stems))
         imgs = video.images
         imgs += imgs[-1],  # Add the last image to the list to have a duration for the last image
 
