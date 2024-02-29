@@ -101,7 +101,7 @@ def browse_output():
     )
 
 
-def validatepositiveint(var):
+def validateint(var):
     if not isinstance(var.get(), str):
         return 0
     try:
@@ -115,11 +115,19 @@ def validate_freq():
     if mode.get() == "i":
         return 1
 
-    return validatepositiveint(freq_int)
+    return validateint(freq_int)
 
 
-def validate_prefix():
-    return validatepositiveint(reduce_length)
+def validate_reduce():
+    return validateint(reduce_length)
+
+
+def validate_offset():
+    return validateint(offset_length)
+
+
+def validate_parents():
+    return validateint(parents_length)
 
 
 def validate_url():
@@ -170,6 +178,7 @@ def disable_prefix():
         parents_entry.config(state="disabled", cursor="X_cursor")
         parents_label.config(foreground="grey", cursor="X_cursor")
 
+
 def disable_retranscrire():
     if retranscrire.get():
         import_entry.config(state="normal", cursor="xterm")
@@ -188,7 +197,7 @@ def validate():
     if mode.get() != "i" and not validate_freq():
         errors.append("Veuillez entrer une fréquence de découpage valide")
 
-    if prefix.get() and not validate_prefix():
+    if prefix.get() and not validate_reduce():
         errors.append("Veuillez entrer une longueur de préfixe valide")
 
     if errors:
@@ -382,7 +391,7 @@ reduce_entry = ttk.Entry(
     textvariable=reduce_length,
     justify="right",
     validate="focusout",
-    validatecommand=validate_prefix,
+    validatecommand=validate_reduce,
     invalidcommand=prefix_error,
 )
 reduce_entry.grid(row=1, column=2, pady=5, rowspan=2)
@@ -394,7 +403,7 @@ offset_entry = ttk.Entry(
     textvariable=offset_length,
     justify="right",
     validate="focusout",
-    validatecommand=validatepositiveint,
+    validatecommand=validate_offset,
     invalidcommand=prefix_error,
 )
 offset_entry.grid(row=3, column=2, pady=5, rowspan=2)
@@ -406,7 +415,7 @@ parents_entry = ttk.Entry(
     textvariable=parents_length,
     justify="right",
     validate="focusout",
-    validatecommand=validatepositiveint,
+    validatecommand=validate_parents,
     invalidcommand=prefix_error,
 )
 parents_entry.grid(row=5, column=2, pady=5, rowspan=2)
