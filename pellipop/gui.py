@@ -1,6 +1,6 @@
 import json
 import tkinter as tk
-from pathlib import Path
+# from pathlib import Path
 from tkinter import filedialog
 
 import ttkbootstrap as ttk
@@ -8,6 +8,7 @@ import ttkbootstrap as ttk
 from pellipop.file_finder import how_many_files
 from pellipop.main import Pellipop, default_output_path
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
+from pellipop.path_fixer import Path
 
 
 class URLImportGUIError(Exception):

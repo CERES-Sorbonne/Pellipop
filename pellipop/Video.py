@@ -1,9 +1,9 @@
 import json
 import subprocess
-from pathlib import Path
+from pathlib import Path as Path_
 from typing import List, Optional
 
-
+from pellipop.path_fixer import Path
 class Video:
     probe = "ffprobe -v panic -show_streams -of json"  # Using ffmpeg to get video infos
 
@@ -14,7 +14,7 @@ class Video:
             offset: int = 0,
             parents_in_name: int = 0
     ):
-        assert isinstance(path, Path), f"{path} is not a Path object"
+        assert isinstance(path, Path_), f"{path} is not a Path object"
         assert path.is_file(), f"{path} is not a file"
         assert path.exists(), f"{path} does not exist"
 
@@ -149,8 +149,10 @@ class Video:
 
 if __name__ == "__main__":
     testfile = "/home/marceau/Téléchargements/pelli/Aladdin.1992.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4"
-
-    video = Video(Path(testfile))
+    testfile = Path(testfile)
+    print(type(testfile))
+    print(type(Path))
+    video = Video(testfile)
     print(video.path, video.name, video.stem, video.reduce, video.offset)
     print(video.length, video.width, video.height, video.fps, video.channels, video.rate)
     print(video.images, video.audio, video.text)

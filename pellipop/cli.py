@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
-from pathlib import Path
 
 from pellipop.main import Pellipop
+from pellipop.path_fixer import Path
 
 # Possibilité de paramétrage dans le terminal/l'invite de commandes
 parser = ArgumentParser()

@@ -2,7 +2,7 @@ import json
 import re
 import subprocess
 from math import ceil, floor
-from pathlib import Path
+# from pathlib import Path
 from typing import Optional
 
 from tqdm.auto import tqdm
@@ -10,6 +10,7 @@ from tqdm.auto import tqdm
 from pellipop.Video import Video
 from pellipop.file_finder import file_finder, how_many_files
 from pellipop.speech_to_text import extractText, whisperMode
+from pellipop.path_fixer import Path
 
 default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()
 
