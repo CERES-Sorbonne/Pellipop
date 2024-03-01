@@ -82,7 +82,7 @@ class Video:
         if not self.parents_in_name:
             return
 
-        parents = [e.name for e in self.path.parents if e.name not in [".", "..", "", "C:", "D:", "E:"]]
+        parents = [e.name for e in self.path.parents if e.name not in [".", "..", "", "C:", "D:", "E:"] and e]
         parents = parents[:min(self.parents_in_name, len(parents))][::-1]
         self.final_stem = "_".join([p for p in parents] + [self.final_stem])
 
