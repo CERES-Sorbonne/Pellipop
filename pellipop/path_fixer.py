@@ -3,29 +3,6 @@ from pathlib import _PosixFlavour
 from pathlib import _WindowsFlavour
 from pathlib import Path as Path_
 
-# class Path(type(Path()), Path):
-#     @classmethod
-#     def win_repair(cls, path):
-#         if any((path.exists(), path.is_file(), path.is_dir())):
-#             return path
-#
-#         path = Path('//?/c:/') / path
-#
-#         if path.exists():
-#             return path
-#
-#         if len(str(path)) > 260:
-#             raise ValueError(
-#                 f"{path} is too long, please change the path (rename the folders, etc.)"
-#                 "to make it shorter than 260 characters"
-#                 "\nOr ensure that you are not using forbidden characters in the path"
-#                 "(like /, :, spaces, etc.)"
-#                 "\nAnd ensure that you are not using reserved names in the path"
-#                 "\nIf everything is correct, please also check if you have the right to access it"
-#             )
-#
-#         raise ValueError(f"{path} does not exist")
-
 def for_all_methods(exclude, decorator):
     def decorate(cls):
         for attr in cls.__dict__:
