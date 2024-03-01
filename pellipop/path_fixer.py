@@ -1,7 +1,5 @@
-import os
-from pathlib import _PosixFlavour
-from pathlib import _WindowsFlavour
 from pathlib import Path as Path_
+
 
 def for_all_methods(exclude, decorator):
     def decorate(cls):
@@ -9,7 +7,9 @@ def for_all_methods(exclude, decorator):
             if callable(getattr(cls, attr)) and attr not in exclude:
                 setattr(cls, attr, decorator(getattr(cls, attr)))
         return cls
+
     return decorate
+
 
 def win_decorator(func):
     def wrapper(*args, **kwargs):
@@ -19,7 +19,9 @@ def win_decorator(func):
             print(e)
             args[0] = Path('//?/c:/') / args[0]
             return func(*args, **kwargs)
+
     return wrapper
+
 
 @for_all_methods(exclude={"__init__"}, decorator=win_decorator)
 class Path(type(Path_()), Path_):
@@ -46,8 +48,6 @@ class Path(type(Path_()), Path_):
             )
 
         raise ValueError(f"{path} does not exist")
-
-
 
 
 if __name__ == "__main__":

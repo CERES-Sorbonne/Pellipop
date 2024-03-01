@@ -18,7 +18,7 @@ default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()
 class Pellipop:
     default_whisper_config = Path.home() / ".whisperrc"
     map_parts = {
-        "audio_part": "-acodec copy -vn $OUTPUT_FOLDER_AUDIO/$FILE_STEM.aac ",
+        "audio_part": '-acodec copy -vn "$OUTPUT_FOLDER_AUDIO/$FILE_STEM.aac" ',
         "i-frame_part": "-skip_frame nokey ",
         "i-frame_part2": "-fps_mode vfr -frame_pts true ",
         "const_freq_part": "-r $FREQ ",
@@ -149,7 +149,7 @@ class Pellipop:
         if self.decouper and self.delete_duplicates:
             command += self.map_parts["i-frame_part"]
 
-        command += "-i $VIDEO_PATH "
+        command += '-i "$VIDEO_PATH" '
 
         if self.decouper:
             if self.delete_duplicates:
@@ -157,7 +157,7 @@ class Pellipop:
             else:
                 command += self.map_parts["const_freq_part"]
 
-            command += "$OUTPUT_FOLDER/$FILE_STEM_%d.jpg "
+            command += '"$OUTPUT_FOLDER/$FILE_STEM_%d.jpg" '
 
         if self.retranscrire:
             self.outputs["audio"] = self.output_folder / "audio"

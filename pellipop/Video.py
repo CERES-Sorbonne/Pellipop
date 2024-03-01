@@ -87,7 +87,7 @@ class Video:
         self.final_stem = "_".join([p for p in parents] + [self.final_stem])
 
     def get_info(self) -> None:
-        command = f"{self.probe} {self.path}"
+        command = f'{self.probe} "{self.path}"'
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         data = json.loads(result.stdout)
 
