@@ -209,6 +209,7 @@ class Pellipop:
             new_img = rename_func(img, fps)
             if new_img.exists():
                 print(f"Collision détectée: {img.name} -> {new_img.name}")
+                continue
             img.rename(new_img)
             pass
 
