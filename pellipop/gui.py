@@ -235,7 +235,7 @@ def lancer():
         "reduce": int(reduce_length.get()),
         "offset": int(offset_length.get()),
         "parents_in_name": int(parents_length.get()),
-        "only_text": True,
+        "with_text": True,
     }
 
     try:

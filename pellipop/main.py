@@ -57,6 +57,7 @@ class Pellipop:
             decouper: bool = True,
             retranscrire: bool = False,
             csv: bool = False,
+            with_text: bool = False,
             only_text: bool = False,
             reduce: int = -1,
             offset: int = 0,
@@ -77,6 +78,7 @@ class Pellipop:
         self.decouper = decouper
         self.retranscrire = retranscrire
         self.csv = csv
+        self.with_text = with_text and not only_text
         self.only_text = only_text
 
         self.whisper_config = whisper_config
@@ -127,6 +129,9 @@ class Pellipop:
         if self.csv:
             print("Création du fichier CSV")
             self.create_csv()
+
+        if self.with_text:
+            self._with_text()
 
         if self.only_text:
             self._only_text()
@@ -356,8 +361,28 @@ class Pellipop:
                     start, end = self.parse_back_timespan_file(img.stem)
                     f.write(f'{img},{start},{end}\n')
 
-    def _only_text(self):
+
+    def _with_text(self):
         """Go from json to txt"""
+        if not self.outputs["text"]:
+            return
+        if not self.outputs["text"].exists():
+            raise FileNotFoundError("Le dossier de sortie n'existe pas")
+        if not self.outputs["text"].is_dir():
+            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
+
+        for video in self.videos:
+            video.text = video.json.with_suffix(".txt")
+
+            with video.json.open(mode="r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            with video.text.open(mode="w", encoding="utf-8") as f:
+                f.write(data["text"])
+
+
+    def _only_text(self):
+        """Go from json to txt and delete the jsons"""
         if not self.outputs["text"]:
             return
         if not self.outputs["text"].exists():
@@ -395,7 +420,8 @@ if __name__ == "__main__":
         decouper=True,
         retranscrire=True,
         csv=True,
-        only_text=True,
+        with_text=True,
+        only_text=False,
         keep_audio=True,
 
         reduce=10,
