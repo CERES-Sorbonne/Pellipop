@@ -7,8 +7,8 @@ import ttkbootstrap as ttk
 
 from pellipop.file_finder import how_many_files
 from pellipop.main import Pellipop, default_output_path
-from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 from pellipop.path_fixer import Path
+from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 
 class URLImportGUIError(Exception):
@@ -235,6 +235,7 @@ def lancer():
         "reduce": int(reduce_length.get()),
         "offset": int(offset_length.get()),
         "parents_in_name": int(parents_length.get()),
+        "only_text": True,
     }
 
     try:
