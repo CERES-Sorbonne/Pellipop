@@ -235,7 +235,7 @@ def lancer():
         "reduce": int(reduce_length.get()),
         "offset": int(offset_length.get()),
         "parents_in_name": int(parents_length.get()),
-        "with_text": True,
+        "with_text": True,  # TODO : With text or only text ? Should we let the user choose ?
     }
 
     try:
@@ -315,12 +315,13 @@ output_button = ttk.Button(output_frame, text="Naviguer", command=browse_output,
 output_entry.grid(row=1, column=0, columnspan=5, ipadx=250, pady=5)
 output_button.grid(row=1, column=5, padx=10)
 
-progress_frame = ttk.Frame(top_frame, padding=10)
-progress_frame.pack()
-progress_label = ttk.Label(progress_frame, text='Progression')
-progress_label.grid(row=0, column=0, columnspan=6)
-progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=500, mode="determinate")
-progress_bar.grid(row=1, column=0, columnspan=6, pady=5)
+# TODO : Progress bar
+# progress_frame = ttk.Frame(top_frame, padding=10)
+# progress_frame.pack()
+# progress_label = ttk.Label(progress_frame, text='Progression')
+# progress_label.grid(row=0, column=0, columnspan=6)
+# progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=500, mode="determinate")
+# progress_bar.grid(row=1, column=0, columnspan=6, pady=5)
 
 ## LEFT FRAME - Découper les vidéos
 left_select_frame = ttk.Frame(main_frame)
@@ -377,6 +378,8 @@ freq_entry = ttk.Entry(
 )
 freq_entry.grid(row=2, column=3, columnspan=3, pady=5)  # /!\ BEFORE the second radiobutton
 
+# TODO : Use the Video class to emulate the renaming behavior on a random file of the given dir
+# / or do a custom function to be able to test it even if no input folder is given yet ?
 prefix_frame = ttk.Frame(left_lv2_frame, padding=10, relief="sunken")
 prefix_frame.grid(row=3, column=0)
 ttk.Label(
