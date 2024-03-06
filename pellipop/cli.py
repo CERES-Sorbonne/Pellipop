@@ -1,6 +1,6 @@
+from sys import argv
 from argparse import ArgumentParser
 
-from pellipop.main import Pellipop
 from pellipop.path_fixer import Path
 
 # Possibilité de paramétrage dans le terminal/l'invite de commandes
@@ -57,10 +57,12 @@ args = parser.parse_args()
 
 
 def main(args=args):
-    if args.gui:
+    if args.gui or len(argv) < 2:
         from gui import main
         main()
         return
+
+    from pellipop.main import Pellipop
 
     pellipop = Pellipop(
         intervale=args.frequency,
