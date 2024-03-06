@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 
 from pellipop.Video import Video
 from pellipop.file_finder import file_finder, how_many_files
-from pellipop.speech_to_text import extractText, whisperMode
+from pellipop.speech_to_text import whisperMode  #, extractText
 from pellipop.path_fixer import Path
 
 default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()
@@ -304,12 +304,16 @@ class Pellipop:
             except Exception as e:
                 print(e)
                 print("Erreur lors de l'extraction du texte avec Whisper")
-                extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
-
+                raise e
         else:
-            print("Aucun fichier de configuration Whisper passé en argument, "
-                  "extraction du texte avec Google Speech-to-Text")
-            extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
+            raise FileNotFoundError("Aucun fichier de configuration Whisper passé en argument ou présent à "
+                                    f"l'emplacement par défaut ({Path.home() / '.whisperrc'})")
+        #         extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
+        #
+        # else:
+        #     print("Aucun fichier de configuration Whisper passé en argument, "
+        #           "extraction du texte avec Google Speech-to-Text")
+        #     extractText.toTextFolder(self.outputs["audio"], self.outputs["text"])
 
         print("Extraction du texte terminée !")
 
