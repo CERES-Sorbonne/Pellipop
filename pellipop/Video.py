@@ -77,10 +77,11 @@ class ABC_Video(ABC):
 
         parents = [e.name for e in self.path.parents if e.name not in [".", "..", "", "C:", "D:", "E:"] and e is not None]
         parents = parents[:min(self.parents_in_name, len(parents))][::-1]
+
         if not parents:
             return self.get_reduce()
-        self.final_stem_attr = "_".join([p for p in parents] + [self.get_reduce()])
 
+        self.final_stem_attr = "_".join([p for p in parents] + [self.get_reduce()])
         return self.final_stem_attr
 
     def get_info(self) -> None:
@@ -105,20 +106,23 @@ class ABC_Video(ABC):
             old_folder: Optional[Path] = None,
             new_folder: Optional[Path] = None
     ) -> Path:
-        if not self.final_stem_attr:
+        final_stem = self.final_stem
+        if final_stem == self.stem:
             return path
-        path = path.rename(path.with_stem(path.stem.replace(self.stem, self.final_stem_attr)))
+
+        path = path.rename(path.with_stem(path.stem.replace(self.stem, final_stem)))
         if old_folder and new_folder:
             path = path.rename(new_folder / path.name)
         return path
 
     def rename_to_final_images(self) -> None:
-        if not self.final_stem_attr:
+        final_stem = self.final_stem
+        if final_stem == self.stem:
             return
 
         old_folder = self.image_folder
 
-        self.image_folder = self.image_folder.parent / self.final_stem_attr.replace(" ", "_")
+        self.image_folder = self.image_folder.parent / final_stem.replace(" ", "_")
         self.image_folder.mkdir(parents=True, exist_ok=True)
         self.images = [
             self.rename_to_final(img, old_folder=old_folder, new_folder=self.image_folder)
