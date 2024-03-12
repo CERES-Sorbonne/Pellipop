@@ -2,15 +2,14 @@ import json
 import re
 import subprocess
 from math import ceil, floor
-# from pathlib import Path
 from typing import Optional
 
 from tqdm.auto import tqdm
 
 from pellipop.Video import Video
 from pellipop.file_finder import file_finder, how_many_files
-from pellipop.speech_to_text import whisperMode  #, extractText
 from pellipop.path_fixer import Path
+from pellipop.speech_to_text import whisperMode  # , extractText
 
 default_output_path = (Path.home() / "Documents" / "Pellipop").__str__()
 
@@ -365,28 +364,15 @@ class Pellipop:
                     start, end = self.parse_back_timespan_file(img.stem)
                     f.write(f'{img},{start},{end}\n')
 
-
     def _with_text(self):
         """Go from json to txt"""
-        if not self.outputs["text"]:
-            return
-        if not self.outputs["text"].exists():
-            raise FileNotFoundError("Le dossier de sortie n'existe pas")
-        if not self.outputs["text"].is_dir():
-            raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
-
-        for video in self.videos:
-            video.text = video.json.with_suffix(".txt")
-
-            with video.json.open(mode="r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            with video.text.open(mode="w", encoding="utf-8") as f:
-                f.write(data["text"])
-
+        self._get_text(delete_json=False)
 
     def _only_text(self):
         """Go from json to txt and delete the jsons"""
+        self._get_text(delete_json=True)
+
+    def _get_text(self, delete_json: bool = False):
         if not self.outputs["text"]:
             return
         if not self.outputs["text"].exists():
@@ -395,6 +381,8 @@ class Pellipop:
             raise NotADirectoryError("Le chemin de sortie n'est pas un dossier")
 
         for video in self.videos:
+            if not video.json:
+                continue
             video.text = video.json.with_suffix(".txt")
 
             with video.json.open(mode="r", encoding="utf-8") as f:
@@ -403,8 +391,9 @@ class Pellipop:
             with video.text.open(mode="w", encoding="utf-8") as f:
                 f.write(data["text"])
 
-            video.json.unlink()
-            video.json = None
+            if delete_json:
+                video.json.unlink()
+                video.json = None
 
     def final_names(self):
         for video in self.videos:
