@@ -1,14 +1,18 @@
 import json
 import tkinter as tk
-# from pathlib import Path
 from tkinter import filedialog
 
 import ttkbootstrap as ttk
 
+from pellipop.Video import DummyVideo
 from pellipop.file_finder import how_many_files
 from pellipop.main import Pellipop, default_output_path
 from pellipop.path_fixer import Path
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
+
+dummy_video = DummyVideo()
+
+print(dummy_video)
 
 
 class URLImportGUIError(Exception):
@@ -16,6 +20,25 @@ class URLImportGUIError(Exception):
         super().__init__(message)
         import_label.config(foreground="red", text=message, cursor="pirate")
         import_entry.config(state="normal", cursor="arrow")
+
+
+def dummy_str():
+    posix = dummy_video.posix.replace(r"\\", "/")
+    final_stem = dummy_video.final_stem.replace(r"\\", "/")
+    max_len = max(len(posix), len(final_stem))
+    if max_len > 50:
+        max_len = 50
+
+    if len(posix) > max_len:
+        posix = "..." + posix[-max_len:]
+
+    if len(final_stem) > max_len:
+        final_stem = "..." + final_stem[-max_len:]
+
+    posix = posix.rjust(max_len)
+    final_stem = final_stem.rjust(max_len)
+
+    return f"Chemin originel:\t{posix}\nBase de nom:\t{final_stem}"
 
 
 def url_import():
@@ -103,13 +126,35 @@ def browse_output():
 
 
 def validateint(var):
-    if not isinstance(var.get(), str):
-        return 0
     try:
-        int(var.get())
+        if not isinstance(var.get(), str):
+            return 0
+        try:
+            int(var.get())
+        except ValueError:
+            return 0
+        return 1
+    finally:
+        update_final_stem()
+
+
+def update_final_stem():
+    if not prefix.get():
+        result_str.set("Résultat")
+        return
+
+    try:
+        reduce = int(reduce_length.get())
+        offset = int(offset_length.get())
+        parents = int(parents_length.get())
     except ValueError:
-        return 0
-    return 1
+        return
+
+    dummy_video.reduce = reduce
+    dummy_video.offset = offset
+    dummy_video.parents_in_name = parents
+
+    result_str.set(dummy_str())
 
 
 def validate_freq():
@@ -424,6 +469,9 @@ parents_entry = ttk.Entry(
     invalidcommand=prefix_error,
 )
 parents_entry.grid(row=5, column=2, pady=5, rowspan=2)
+result_str = tk.StringVar(value=dummy_str())
+result_label = ttk.Label(prefix_frame, textvariable=result_str)
+result_label.grid(row=7, column=0, columnspan=3, pady=10)
 
 ## RIGHT FRAME - STT
 
