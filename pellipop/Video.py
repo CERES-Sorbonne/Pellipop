@@ -155,38 +155,6 @@ class ABC_Video(ABC):
     def posix(self) -> str:
         return self.path.as_posix()
 
-    # @property
-    # def reduce(self) -> int:
-    #     return self.reduce_attr
-    #
-    # @reduce.setter
-    # def reduce(self, value: int) -> None:
-    #     assert isinstance(value, int), f"{value} is not an int"
-    #     assert value >= -1, f"{value} is not a valid reduce value"
-    #     self.reduce_attr = value
-    #     self.get_reduce()
-    #
-    # @property
-    # def offset(self) -> int:
-    #     return self.offset_attr
-    #
-    # @offset.setter
-    # def offset(self, value: int) -> None:
-    #     assert isinstance(value, int), f"{value} is not an int"
-    #     assert value >= 0, f"{value} is not a valid offset value"
-    #     self.offset_attr = value
-    #     self.get_reduce()
-    #
-    # @property
-    # def parents_in_name(self) -> int:
-    #     return self.parents_in_name_attr
-    #
-    # @parents_in_name.setter
-    # def parents_in_name(self, value: int) -> None:
-    #     assert isinstance(value, int), f"{value} is not an int"
-    #     assert value >= 0, f"{value} is not a valid parents_in_name value"
-    #     self.parents_in_name_attr = value
-    #     self.get_parents()
 
 
 class Video(ABC_Video):
@@ -211,11 +179,6 @@ class Video(ABC_Video):
         assert isinstance(parents_in_name, int), f"{parents_in_name} is not an int"
         assert parents_in_name >= 0, f"{parents_in_name} is not a valid parents_in_name value"
 
-        # self._path: Path = path
-        #
-        # self._reduce: int = reduce
-        # self._offset: int = offset
-        # self._parents_in_name: int = parents_in_name
 
         super().__init__(
             path=path,
@@ -238,13 +201,7 @@ class DummyVideo(ABC_Video):
             offset: int = 0,
             parents_in_name: int = 0,
     ):
-        path.resolve()
-        # super().__init__()
-        #
-        # self._path = path
-        # self._reduce = reduce
-        # self._offset = offset
-        # self._parents_in_name = parents_in_name
+
         super().__init__(
             path=path,
             reduce=reduce,
