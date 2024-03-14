@@ -345,11 +345,11 @@ class Pellipop:
             video.csv = self.outputs["csv"] / video.with_suffix(".csv").name
             with video.csv.open(mode="w", encoding="utf-8") as f:
                 json_file = json.loads(video.json.read_text(encoding="utf-8"))
-                f.write("img,start,end,text\n")
+                f.write("video,img,start,end,text\n")
                 for img in video.images:
                     start, end = self.parse_back_timespan_file(img.stem)
                     text = self.find_text(json_file, start, end)
-                    f.write(f'{img},{start},{end},"{text}"\n')
+                    f.write(f'{video.path},{img.stem},{start},{end},"{text}"\n')
 
     def _create_csv_without_text(self):
         assert self.outputs["image"] is not None, (
@@ -359,10 +359,10 @@ class Pellipop:
         for video in self.videos:
             video.csv = self.outputs["csv"] / video.with_suffix(".csv").name
             with video.csv.open(mode="w", encoding="utf-8") as f:
-                f.write("img,start,end\n")
+                f.write("video,img,start,end\n")
                 for img in video.images:
                     start, end = self.parse_back_timespan_file(img.stem)
-                    f.write(f'{img},{start},{end}\n')
+                    f.write(f'{video.path},{img.stem},{start},{end}\n')
 
     def _with_text(self):
         """Go from json to txt"""
