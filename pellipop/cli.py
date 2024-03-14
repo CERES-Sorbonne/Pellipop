@@ -6,7 +6,7 @@ from pellipop.path_fixer import Path
 # Possibilité de paramétrage dans le terminal/l'invite de commandes
 parser = ArgumentParser()
 parser.add_argument(
-    "--input", type=str, required=True,
+    "--input", type=str,  # required=True,
     help="Dossier racine contenant les vidéos"
 )
 parser.add_argument(
@@ -14,7 +14,7 @@ parser.add_argument(
     help="Définition de l'intervalle de temps (en secondes) à laquelle réaliser des captures d'écran. Il faut simplement indiqué une valeur numérique."
 )
 parser.add_argument(
-    "--output", type=str, required=True, default=Path.cwd(),
+    "--output", type=str, default=Path.cwd(),  # required=True,
     help="Dossier de sortie pour les images extraites, les fichiers audio et le fichier CSV"
 )
 parser.add_argument(
@@ -58,9 +58,22 @@ args = parser.parse_args()
 
 def main(args=args):
     if args.gui or len(argv) < 2:
-        from gui import main
-        main()
-        return
+        from pellipop import gui
+        return gui()
+
+
+    input_folder = Path(args.input)
+    if not input_folder.exists():
+        raise FileNotFoundError(f"Le dossier {input_folder} n'existe pas !")
+
+    if not input_folder.is_dir():
+        raise NotADirectoryError(f"{input_folder} n'est pas un dossier !")
+
+    if not input_folder.glob("*.mp4"):
+        raise FileNotFoundError(f"Aucun fichier .mp4 trouvé dans {input_folder} !")
+
+    if not args.output:
+        raise FileNotFoundError("Le dossier de sortie n'a pas été spécifié !")
 
     from pellipop.main import Pellipop
 
