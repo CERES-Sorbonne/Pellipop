@@ -121,7 +121,8 @@ jobs:
 
       - name: Verify package
         run: |
-          ls -Al dist
+          cd dist
+          ls -Al 
           tar -xvf pellipop-0.7.2.tar.gz
           ls -Al pellipop-0.7.2
           cat pellipop-0.7.2/pellipop/__about__.py
