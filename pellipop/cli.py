@@ -1,5 +1,6 @@
 from sys import argv
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from typing import Dict
 
 from pellipop.path_fixer import Path
 
@@ -53,10 +54,8 @@ parser.add_argument(
     help="Permet d'utiliser l'interface graphique"
 )
 
-args = parser.parse_args()
 
-
-def main(args=args):
+def main(args: Namespace) -> dict[str, Path | None]:
     if args.gui or len(argv) < 2:
         from pellipop.gui import main as gui
         return gui()
@@ -101,4 +100,4 @@ def main(args=args):
 
 
 if __name__ == "__main__":
-    main()
+    main(parser.parse_args())
