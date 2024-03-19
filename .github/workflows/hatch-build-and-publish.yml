@@ -122,6 +122,11 @@ jobs:
       - name: Verify package
         run: |
           ls -Al dist
+          tar -xvf pellipop-${{ needs.get-tag.outputs.tag }}.tar.gz
+          ls -Al pellipop-${{ needs.get-tag.outputs.tag }}
+          cat pellipop-${{ needs.get-tag.outputs.tag }}/pellipop/__about__.py
+          cat pellipop-${{ needs.get-tag.outputs.tag }}/PKG-INFO
+          
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@v1.8.11
