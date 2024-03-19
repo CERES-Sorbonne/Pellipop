@@ -122,10 +122,10 @@ jobs:
       - name: Verify package
         run: |
           ls -Al dist
-          tar -xvf pellipop-*.tar.gz
-          ls -Al pellipop-*
-          cat pellipop-*/pellipop/__about__.py
-          cat pellipop-*/PKG-INFO
+          tar -xvf pellipop-0.7.2.tar.gz
+          ls -Al pellipop-0.7.2
+          cat pellipop-0.7.2/pellipop/__about__.py
+          cat pellipop-0.7.2/PKG-INFO
           
 
       - name: Publish package
