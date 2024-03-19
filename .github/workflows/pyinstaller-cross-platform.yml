@@ -207,24 +207,24 @@ jobs:
           sudo ln -s /usr/bin/msgcat /usr/local/bin/msgcat
           cp ./linux-fix/msgcat.py /opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/ttkbootstrap/localization/msgcat.py || exit 0
 
-      - name: UPX
-        if : matrix.os == 'windows-latest' # UPX is only available on Windows for now
-        run: |
-            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-                choco install upx
-                upx --version
-                echo "UPX_PATH=/tools/upx/upx.exe" >> $GITHUB_ENV
-            elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-                sudo apt-get install upx
-                upx --version
-                echo "UPX_PATH=/usr/bin/upx" >> $GITHUB_ENV
-            elif [[ "${{ matrix.os }}" == "macos-latest" || "${{ matrix.os }}" == "macos-14" ]]; then
-                brew install upx
-                upx --version
-                echo "UPX_PATH=/usr/local/bin/upx" >> $GITHUB_ENV
-            else
-                echo "Unknown OS, did the matrix changed ?" 2>&1
-            fi
+#      - name: UPX
+#        if : matrix.os == 'windows-latest' # UPX is only available on Windows for now
+#        run: |
+#            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+#                choco install upx
+#                upx --version
+#                echo "UPX_PATH=/tools/upx/upx.exe" >> $GITHUB_ENV
+#            elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+#                sudo apt-get install upx
+#                upx --version
+#                echo "UPX_PATH=/usr/bin/upx" >> $GITHUB_ENV
+#            elif [[ "${{ matrix.os }}" == "macos-latest" || "${{ matrix.os }}" == "macos-14" ]]; then
+#                brew install upx
+#                upx --version
+#                echo "UPX_PATH=/usr/local/bin/upx" >> $GITHUB_ENV
+#            else
+#                echo "Unknown OS, did the matrix changed ?" 2>&1
+#            fi
 
       - name: Build with pyinstaller
         run: |
