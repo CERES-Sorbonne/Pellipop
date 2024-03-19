@@ -9,8 +9,6 @@ from pellipop.Video import Video
 from pellipop.file_finder import file_finder
 
 
-# with open("config.json", "r", encoding="utf-8") as f:
-#     config_data = json.load(f)
 
 def rm_tree(pth: Path) -> None:
     """https://stackoverflow.com/questions/50186904/pathlib-recursively-remove-directory
@@ -111,7 +109,6 @@ def toTextFolder(
         toText(config_data, audio, text, wc=wc, mode=mode)
 
 
-
 def main(
         config_data: str | dict | Path,
         *args,
@@ -180,6 +177,9 @@ def main(
 
 
 if __name__ == "__main__":
+    with open("config.json", "r", encoding="utf-8") as f:
+        config_data = json.load(f)
+
     main(
         config_data,
         audioPath="/home/marceau/PycharmProjects/Pellipop/videos-collecte1/extracted_audio",
