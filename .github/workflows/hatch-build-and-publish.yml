@@ -127,6 +127,7 @@ jobs:
           ls -Al pellipop-0.7.2
           cat pellipop-0.7.2/pellipop/__about__.py
           cat pellipop-0.7.2/PKG-INFO
+          rm -rf pellipop-0.7.2
           
 
       - name: Publish package
