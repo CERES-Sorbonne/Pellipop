@@ -119,6 +119,10 @@ jobs:
         run: |
           hatch build
 
+      - name: Verify package
+        run: |
+          ls -Al dist
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@v1.8.11
         with:
