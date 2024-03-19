@@ -119,15 +119,15 @@ jobs:
         run: |
           hatch build
 
-      - name: Verify package
-        run: |
-          cd dist
-          ls -Al 
-          tar -xvf pellipop-0.7.2.tar.gz
-          ls -Al pellipop-0.7.2
-          cat pellipop-0.7.2/pellipop/__about__.py
-          cat pellipop-0.7.2/PKG-INFO
-          rm -rf pellipop-0.7.2
+#      - name: Verify package
+#        run: |
+#          cd dist
+#          ls -Al
+#          tar -xvf pellipop-0.7.2.tar.gz
+#          ls -Al pellipop-0.7.2
+#          cat pellipop-0.7.2/pellipop/__about__.py
+#          cat pellipop-0.7.2/PKG-INFO
+#          rm -rf pellipop-0.7.2
           
 
       - name: Publish package
