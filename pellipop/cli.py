@@ -58,7 +58,7 @@ args = parser.parse_args()
 
 def main(args=args):
     if args.gui or len(argv) < 2:
-        from pellipop import gui
+        from pellipop.gui import main as gui
         return gui()
 
 
