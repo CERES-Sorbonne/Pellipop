@@ -160,7 +160,6 @@ class ABC_Video(ABC):
         return self.path.as_posix()
 
 
-
 class Video(ABC_Video):
 
     def __init__(
@@ -183,7 +182,6 @@ class Video(ABC_Video):
         assert isinstance(parents_in_name, int), f"{parents_in_name} is not an int"
         assert parents_in_name >= 0, f"{parents_in_name} is not a valid parents_in_name value"
 
-
         super().__init__(
             path=path,
             reduce=reduce,
@@ -205,7 +203,6 @@ class DummyVideo(ABC_Video):
             offset: int = 0,
             parents_in_name: int = 0,
     ):
-
         super().__init__(
             path=path,
             reduce=reduce,

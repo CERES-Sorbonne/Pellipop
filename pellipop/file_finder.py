@@ -1,6 +1,6 @@
+from enum import Enum
 from pathlib import Path
 from typing import Generator, Optional, Set
-from enum import Enum
 
 video_formats = {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"}
 image_formats = {".jpg"}
@@ -18,6 +18,7 @@ map_formats = {
     "json": json_formats,
 }
 
+
 class FileType(Enum):
     video = video_formats
     image = image_formats
@@ -25,6 +26,7 @@ class FileType(Enum):
     text = text_formats
     csv = csv_formats
     json = json_formats
+
 
 def file_finder(
         path: str | Path,
@@ -46,7 +48,6 @@ def file_finder(
             raise ValueError(f"ERROR : invalid deepness treshold : {deep}")
     elif not isinstance(deep, int):
         raise ValueError(f"ERROR : invalid deepness treshold : {deep}")
-
 
     if isinstance(file_type, FileType):
         pass
@@ -98,4 +99,3 @@ if __name__ == "__main__":
     path = Path("/home/marceau/Documents/Pellipop/text")
     print(how_many_files(path, format="json"))
     # print(list(file_finder(path)))
-

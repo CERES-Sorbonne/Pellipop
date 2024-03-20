@@ -1,6 +1,5 @@
-from sys import argv
 from argparse import ArgumentParser, Namespace
-from typing import Dict
+from sys import argv
 
 from pellipop.path_fixer import Path
 
@@ -59,7 +58,6 @@ def main(args: Namespace) -> dict[str, Path | None]:
     if args.gui or len(argv) < 2:
         from pellipop.gui import main as gui
         return gui()
-
 
     input_folder = Path(args.input)
     if not input_folder.exists():

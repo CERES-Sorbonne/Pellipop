@@ -9,7 +9,6 @@ from pellipop.Video import Video
 from pellipop.file_finder import file_finder
 
 
-
 def rm_tree(pth: Path) -> None:
     """https://stackoverflow.com/questions/50186904/pathlib-recursively-remove-directory
     Removes all content of a directory recursively but not the directory itself"""
