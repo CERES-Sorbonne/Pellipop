@@ -10,6 +10,7 @@ This readme is also available in [English](https://github.com/CERES-Sorbonne/Pel
 3. [Usage](#usage)
     1. [Interface graphique](#interface-graphique)
     2. [Ligne de commande](#ligne-de-commande)
+4. [License](#license)
 
 
 ## Description
@@ -89,3 +90,6 @@ est lancée, et les images créées sont également stockées au même endroit. 
 pellipop --input C:\Users\Utilisateur\Videos\Captures --output D:\Users\Bureau\Output --i-frame-mode
 ```
 
+
+## License
+Ce projet est sous licence MPL-2.0 - voir le fichier [LICENSE](https://github.com/CERES-Sorbonne/Pellipop/blob/master/LICENSE.txt) pour plus de détails.

@@ -8,7 +8,7 @@
 3. [Usage](#usage)
     1. [Graphical Interface](#graphical-interface)
     2. [Command Line](#command-line)
-
+4. [License](#license)
 
 ## Description
 Pellipop is a tool for cutting videos into still images, with text and audio extraction.
@@ -84,3 +84,7 @@ is launched, and the created images are also stored in the same place. However, 
 ```bash
 pellipop --input C:\Users\User\Videos\Captures --output D:\Users\Desktop\Output --i-frame-mode
 ```
+
+## License
+This project is licensed under the MPL-2.0 License - see the [LICENSE](https://github.com/CERES-Sorbonne/Pellipop/blob/master/LICENSE.txt) file for details.
+
