@@ -1,4 +1,6 @@
 # Pellipop
+This readme is also available in [English](https://github.com/CERES-Sorbonne/Pellipop/blob/master/readme_en.md)
+
 ## Table des matières
 1. [Description](#description)
 2. [Installation](#installation)
@@ -84,6 +86,6 @@ est lancée, et les images créées sont également stockées au même endroit. 
 
 #### Exemple d'usage:
 ```bash
-pellipop --input C:\Users\Utilisateur\Videos\Captures --output D:\Users\Bureau\Output --frequency 1 --remove_duplicates
+pellipop --input C:\Users\Utilisateur\Videos\Captures --output D:\Users\Bureau\Output --i-frame-mode
 ```
 
