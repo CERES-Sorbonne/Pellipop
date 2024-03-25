@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from sys import argv
 
+from pellipop.__about__ import __version__
 from pellipop.path_fixer import Path
 
 # Possibilité de paramétrage dans le terminal/l'invite de commandes
@@ -10,7 +11,7 @@ parser.add_argument(
     help="Dossier racine contenant les vidéos"
 )
 parser.add_argument(
-    "--frequency", type=int, default=5,
+    "--interval", type=int, default=5,
     help="Définition de l'intervalle de temps (en secondes) à laquelle réaliser des captures d'écran. Il faut simplement indiqué une valeur numérique."
 )
 parser.add_argument(
@@ -18,11 +19,11 @@ parser.add_argument(
     help="Dossier de sortie pour les images extraites, les fichiers audio et le fichier CSV"
 )
 parser.add_argument(
-    "--remove_duplicates", type=bool, default=False, nargs='?', const=True,
-    help="Permet de supprimer les doublons d'images pour un même film en utilisant l'algorithme average hash"
+    "--i-frame-mode", type=bool, default=True, nargs='?', const=True,
+    help="Permet de supprimer les doublons d'images pour un même film en utilisant les images clés (keyframes)"
 )
 parser.add_argument(
-    "--keep_audio", type=bool, default=False, nargs='?', const=True,
+    "--keep-audio", type=bool, default=False, nargs='?', const=True,
     help="Permet de garder les fichiers audio extraits des vidéos"
 )
 parser.add_argument(
@@ -52,7 +53,9 @@ parser.add_argument(
     "-g", "--gui", type=bool, default=False, nargs='?', const=True,
     help="Permet d'utiliser l'interface graphique"
 )
-
+parser.add_argument(
+    "-v", "--version", action="version", version=f"%(prog)s {__version__}"
+)
 
 def main(args: Namespace) -> dict[str, Path | None]:
     if args.gui or len(argv) < 2:
@@ -72,13 +75,15 @@ def main(args: Namespace) -> dict[str, Path | None]:
     if not args.output:
         raise FileNotFoundError("Le dossier de sortie n'a pas été spécifié !")
 
+    assert args.interval or args.i_frame_mode, "Il faut spécifier un intervalle ou activer le mode i-frame"
+
     from pellipop.main import Pellipop
 
     pellipop = Pellipop(
-        intervale=args.frequency,
+        intervale=args.interval,
         input_folder=args.input,
         output_folder=args.output,
-        delete_duplicates=args.remove_duplicates,
+        i_frame_mode=(args.i_frame_mode and not args.interval),
         decouper=not args.frames_only,
         retranscrire=not args.frames_only,
         csv=not args.frames_only,
