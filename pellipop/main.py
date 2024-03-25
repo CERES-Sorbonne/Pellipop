@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import re
 import subprocess
@@ -52,7 +54,7 @@ class Pellipop:
             intervale: float,
             input_folder: str | Path,
             output_folder: str | Path = Path.home() / "Documents" / "Pellipop",
-            delete_duplicates: bool = False,
+            i_frame_mode: bool = True,
             decouper: bool = True,
             retranscrire: bool = False,
             csv: bool = False,
@@ -73,7 +75,7 @@ class Pellipop:
         self.intervale = intervale if intervale else 1
         self.input_folder = input_folder
         self.output_folder = output_folder
-        self.delete_duplicates = delete_duplicates
+        self.i_frame_mode = i_frame_mode
         self.decouper = decouper
         self.retranscrire = retranscrire
         self.csv = csv
@@ -150,13 +152,13 @@ class Pellipop:
         command = self.base
         frequence = 1 / self.intervale
 
-        if self.decouper and self.delete_duplicates:
+        if self.decouper and self.i_frame_mode:
             command += self.map_parts["i-frame_part"]
 
         command += '-i "$VIDEO_PATH" '
 
         if self.decouper:
-            if self.delete_duplicates:
+            if self.i_frame_mode:
                 command += self.map_parts["i-frame_part2"]
             else:
                 command += self.map_parts["const_freq_part"]
@@ -192,7 +194,7 @@ class Pellipop:
 
             video.audio = self.outputs["audio"] / video.with_suffix(".aac").name if self.retranscrire else None
 
-            if self.delete_duplicates:
+            if self.i_frame_mode:
                 self.from_frame_to_time(video, video.fps)
             else:
                 self.from_frame_to_time(video)
@@ -204,7 +206,7 @@ class Pellipop:
     def from_frame_to_time(self, video: Video, fps: int = 0):
         lst_img = sorted(video.image_folder.glob("*.jpg"))
 
-        if self.delete_duplicates:
+        if self.i_frame_mode:
             rename_func = self._ftt_no_duplicates
         else:
             rename_func = self._ftt_duplicates
@@ -409,7 +411,7 @@ if __name__ == "__main__":
         intervale=4,
         input_folder=testdir,
         output_folder=default_output_path,
-        delete_duplicates=True,
+        i_frame_mode=True,
         decouper=True,
         retranscrire=True,
         csv=True,
