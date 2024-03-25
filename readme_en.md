@@ -1,4 +1,7 @@
 # Pellipop
+[![PyPI - Version](https://img.shields.io/pypi/v/pellipop.svg)](https://pypi.org/project/pellipop)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pellipop.svg)](https://pypi.org/project/pellipop)
+
 ## Table of Contents
 1. [Description](#description)
 2. [Installation](#installation)

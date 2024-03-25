@@ -1,4 +1,8 @@
 # Pellipop
+
+[![PyPI - Version](https://img.shields.io/pypi/v/pellipop.svg)](https://pypi.org/project/pellipop)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pellipop.svg)](https://pypi.org/project/pellipop)
+
 This readme is also available in [English](https://github.com/CERES-Sorbonne/Pellipop/blob/master/readme_en.md)
 
 ## Table des matières
