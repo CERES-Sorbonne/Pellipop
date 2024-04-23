@@ -273,7 +273,7 @@ def lancer():
         "intervale": freq,
         "input_folder": input_folder.get(),
         "output_folder": output_folder.get(),
-        "i-frame-mode": mode.get() == "i",
+        "i_frame_mode": mode.get() == "i",
         "decouper": decouper.get(),
         "retranscrire": retranscrire.get(),
         "csv": csv.get(),
