@@ -57,7 +57,9 @@ parser.add_argument(
     "-v", "--version", action="version", version=f"%(prog)s {__version__}"
 )
 
-def main(args: Namespace) -> dict[str, Path | None]:
+def main() -> dict[str, Path | None]:
+    args = parser.parse_args()
+
     if args.gui or len(argv) < 2:
         from pellipop.gui import main as gui
         return gui()
@@ -103,4 +105,4 @@ def main(args: Namespace) -> dict[str, Path | None]:
 
 
 if __name__ == "__main__":
-    main(parser.parse_args())
+    main()
