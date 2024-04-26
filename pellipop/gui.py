@@ -284,6 +284,7 @@ def lancer():
     }
 
     try:
+        print(f" Launching pellipop with config :\n{config}")
         pelli = Pellipop(**config)
         csv_outp = pelli.launch()
 

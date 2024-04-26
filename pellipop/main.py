@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 from math import ceil, floor
+from time import sleep
 from typing import Optional
 
 from tqdm.auto import tqdm
@@ -50,6 +51,7 @@ class Pellipop:
 
     def __init__(
             self,
+            /,
             *args,
             intervale: float,
             input_folder: str | Path,
@@ -68,6 +70,8 @@ class Pellipop:
 
             whisper_config: dict = None,
             keep_audio: bool = False,
+
+            **kwargs,
     ):
         if args:
             raise
@@ -204,7 +208,7 @@ class Pellipop:
         return self.outputs["image"], self.outputs["audio"]
 
     def from_frame_to_time(self, video: Video, fps: int = 0):
-        lst_img = sorted(video.image_folder.glob("*.jpg"))
+        lst_img = sorted(video.image_folder.glob("*.jpg"), key=lambda x: int(self.ending_digits.findall(x.stem)[0]))
 
         if self.i_frame_mode:
             rename_func = self._ftt_no_duplicates
@@ -215,9 +219,12 @@ class Pellipop:
             new_img = rename_func(img, fps)
             if new_img.exists():
                 print(f"Collision détectée: {img.name} -> {new_img.name}")
-                continue
+                # img.unlink()
+                # continue
             img.rename(new_img)
             pass
+
+        sleep(0.1)
 
         video.images = sorted(video.image_folder.glob("*.jpg"))
 
@@ -407,22 +414,37 @@ if __name__ == "__main__":
     testdir = "/home/marceau/Téléchargements/pelli/"
     print(how_many_files(testdir))
 
-    p = Pellipop(
-        intervale=4,
-        input_folder=testdir,
-        output_folder=default_output_path,
-        i_frame_mode=True,
-        decouper=True,
-        retranscrire=True,
-        csv=True,
-        with_text=True,
-        only_text=False,
-        keep_audio=True,
+    config = {
+        'intervale': None,
+        'input_folder': '/home/marceau/Téléchargements/pelli',
+        'output_folder': '/home/marceau/Documents/Pellipop',
+        'i_frame_mode': True,
+        'decouper': True,
+        'retranscrire': False,
+        'csv': True,
+        'reduce': -1,
+        'offset': 0,
+        'parents_in_name': 0,
+        'with_text': True
+    }
+    p = Pellipop(**config)
 
-        reduce=10,
-        offset=5,
-        parents_in_name=2,
-    )
+    # p = Pellipop(
+    #     intervale=4,
+    #     input_folder=testdir,
+    #     output_folder=default_output_path,
+    #     i_frame_mode=True,
+    #     decouper=True,
+    #     retranscrire=True,
+    #     csv=True,
+    #     with_text=True,
+    #     only_text=False,
+    #     keep_audio=True,
+    #
+    #     reduce=10,
+    #     offset=5,
+    #     parents_in_name=2,
+    # )
     p.launch()
 
     ## Csv only test

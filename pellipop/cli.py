@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from sys import argv
 
 from pellipop.__about__ import __version__
@@ -56,6 +56,7 @@ parser.add_argument(
 parser.add_argument(
     "-v", "--version", action="version", version=f"%(prog)s {__version__}"
 )
+
 
 def main() -> dict[str, Path | None]:
     args = parser.parse_args()
