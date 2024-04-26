@@ -2,7 +2,11 @@
 pellipop = "pellipop.cli:main"
 pellipop-cli = "pellipop.cli:main"
 pellipop-gui = "pellipop.gui:main"
+pellipip = "pellipop.pip:main"
 
+
+[project.gui-scripts]
+pellipop = "pellipop.gui:main"
 
 [build-system]
 requires = ["hatchling"]
