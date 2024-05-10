@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Folder Directory Input</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+  }
+  input[type="file"] {
+    display: none;
+  }
+  label {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  label:hover {
+    background-color: #45a049;
+  }
+</style>
+</head>
+<body>
+
+<label for="folderInput">Select Folder:</label>
+<input type="file" id="folderInput" webkitdirectory directory multiple onchange="handleFolder(this.files)">
+<br>
+<div id="folderStructure"></div>
+<div id="uniqueFiles"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<script>
+function handleFolder(files) {
+  const folderStructure = document.getElementById('folderStructure');
+  const uniqueFilesDiv = document.getElementById('uniqueFiles');
+  folderStructure.innerHTML = '';
+  uniqueFilesDiv.innerHTML = '';
+  const fileContents = {};
+  const fullDirectoryTree = {};
+  const fileDictionary = {};
+
+  for (let i = 0; i < files.length; i++) {
+    const folder = files[i];
+    const folderPath = folder.webkitRelativePath.split('/');
+    let currentDirectory = fullDirectoryTree;
+    for (let j = 0; j < folderPath.length; j++) {
+      const folderName = folderPath[j];
+      if (!currentDirectory[folderName]) {
+        currentDirectory[folderName] = {};
+      }
+      currentDirectory = currentDirectory[folderName];
+    }
+    const fileHash = calculateFileHash(folder);
+    const filePath = folder.webkitRelativePath;
+    fileDictionary[fileHash] = filePath;
+    listFolderContents(folder, fileContents, fileHash);
+  }
+
+  renderDirectoryTree(fullDirectoryTree, folderStructure);
+  renderUniqueFiles(fileContents, uniqueFilesDiv, fileDictionary);
+
+  console.log(fullDirectoryTree);
+  console.log(fileDictionary);
+}
+
+async function calculateFileHash(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const fileContent = event.target.result;
+      const hash = CryptoJS.SHA256(fileContent).toString();
+      resolve(hash);
+    };
+    reader.onerror = function(error) {
+      reject(error);
+    };
+    reader.readAsText(file);
+  });
+}
+function listFolderContents(folder, fileContents, fileHash) {
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const fileName = folder.name;
+    const fileContent = event.target.result;
+    fileContents[fileHash] = fileContent;
+  };
+  reader.readAsText(folder);
+}
+
+function renderDirectoryTree(directory, parentElement) {
+  const ul = document.createElement('ul');
+  for (const item in directory) {
+    const li = document.createElement('li');
+    li.textContent = item;
+    ul.appendChild(li);
+    if (typeof directory[item] === 'object') {
+      renderDirectoryTree(directory[item], li);
+    }
+  }
+  parentElement.appendChild(ul);
+}
+
+function renderUniqueFiles(fileContents, parentElement, fileDictionary) {
+  const ul = document.createElement('ul');
+  for (const fileHash in fileContents) {
+    const fileName = fileDictionary[fileHash];
+    const filePathParts = fileName.split('/');
+    const fileNameOnly = filePathParts[filePathParts.length - 1];
+    const modifiedFileName = fileHash + fileNameOnly.substr(fileNameOnly.lastIndexOf('.'));
+    const li = document.createElement('li');
+    li.textContent = modifiedFileName;
+    ul.appendChild(li);
+  }
+  parentElement.appendChild(ul);
+}
+</script>
+
+</body>
+</html>
