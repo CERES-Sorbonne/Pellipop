@@ -75,6 +75,7 @@ path = "pellipop/__about__.py"
 [tool.hatch.build.targets.sdist]
 include = [
     "/pellipop",
+    "*.ico",
 ]
 
 [tool.hatch.envs.default]
