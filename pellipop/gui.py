@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 import ttkbootstrap as ttk
+from PIL import Image, ImageTk
 
 from pellipop.Video import DummyVideo
 from pellipop.file_finder import how_many_files
@@ -312,11 +313,12 @@ def lancer():
 root = ttk.Window(
     "Pellipop",
     themename="journal",
-    iconphoto="pellipop.ico",
-    size=(1400, 1000),
+    size=(1000, 850),
     resizable=(True, True),
-    minsize=(1050, 900),
+    minsize=(1000, 850),
 )
+icon = Image.open("pellipop.ico")
+root.iconphoto(False, ImageTk.PhotoImage(icon))
 
 main_frame = ttk.Frame(root, padding=10)
 main_frame.pack(fill="both", expand=True)
