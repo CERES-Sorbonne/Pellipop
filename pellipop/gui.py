@@ -317,8 +317,10 @@ root = ttk.Window(
     resizable=(True, True),
     minsize=(1000, 850),
 )
-icon = Image.open("pellipop.ico")
-root.iconphoto(False, ImageTk.PhotoImage(icon))
+icon_path = Path(__file__).parent / "pellipop.ico"
+if icon_path.exists():
+    icon = Image.open(icon_path)
+    root.iconphoto(False, ImageTk.PhotoImage(icon))
 
 main_frame = ttk.Frame(root, padding=10)
 main_frame.pack(fill="both", expand=True)
