@@ -331,7 +331,7 @@ jobs:
           git config --global user.name "$user"
           git config --global user.email "$email"
 
-      - name: release # TODO: Put user in release ?
+      - name: release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -13,8 +13,7 @@ from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
 
 dummy_video = DummyVideo()
 
-print(dummy_video)
-
+# print(dummy_video)
 
 class URLImportGUIError(Exception):
     def __init__(self, message):
@@ -309,14 +308,15 @@ def lancer():
 
 
 ## ROOT
-
 root = ttk.Window(
-    "Pellipop",
+    title="Pellipop",
     themename="journal",
     size=(1000, 850),
     resizable=(True, True),
     minsize=(1000, 850),
 )
+root.iconname("Pellipop")
+
 icon_path = Path(__file__).parent / "pellipop.ico"
 if icon_path.exists():
     icon = Image.open(icon_path)
