@@ -176,7 +176,8 @@ class Pellipop:
 
         command = command.replace("$FREQ", str(frequence))
 
-        for video in tqdm(self.videos, desc="Découpage des vidéos", unit=" vidéos", total=self.hm):
+        pbar = tqdm(self.videos, desc="Découpage des vidéos", unit=" vidéos", total=self.hm)
+        for video in pbar:
             fichier = video.path
             output_folder = self.outputs["image"] / fichier.stem.replace(' ', '_')
             video.image_folder = output_folder
@@ -199,15 +200,15 @@ class Pellipop:
             video.audio = self.outputs["audio"] / video.with_suffix(".aac").name if self.retranscrire else None
 
             if self.i_frame_mode:
-                self.from_frame_to_time(video, video.fps)
+                self.from_frame_to_time(video, video.fps, pbar=pbar)
             else:
-                self.from_frame_to_time(video)
+                self.from_frame_to_time(video, pbar=pbar)
 
             self._from_time_to_timespan_folder(video)
 
         return self.outputs["image"], self.outputs["audio"]
 
-    def from_frame_to_time(self, video: Video, fps: int = 0):
+    def from_frame_to_time(self, video: Video, fps: int = 0, pbar=None):
         lst_img = sorted(video.image_folder.glob("*.jpg"), key=lambda x: int(self.ending_digits.findall(x.stem)[0]))
 
         if self.i_frame_mode:
@@ -218,7 +219,10 @@ class Pellipop:
         for img in lst_img:
             new_img = rename_func(img, fps)
             if new_img.exists():
-                print(f"Collision détectée: {img.name} -> {new_img.name}")
+                if pbar:
+                    pbar.write(f"Collision détectée: {img.name} -> {new_img.name}")
+                else:
+                    print(f"Collision détectée: {img.name} -> {new_img.name}")
                 # img.unlink()
                 # continue
             img.rename(new_img)
