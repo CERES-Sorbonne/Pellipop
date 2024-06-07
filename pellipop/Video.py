@@ -9,6 +9,31 @@ from pellipop.path_fixer import Path
 
 class ABC_Video(ABC):
     probe = "ffprobe -v panic -show_streams -of json"  # Using ffmpeg to get video infos
+    probe_duration = "ffprobe -v panic -show_entries format=duration -of default=noprint_wrappers=1:nokey=1"
+    probe_width = "ffprobe -v panic -show_entries stream=width -of default=noprint_wrappers=1:nokey=1"
+    probe_height = "ffprobe -v panic -show_entries stream=height -of default=noprint_wrappers=1:nokey=1"
+    probe_fps = "ffprobe -v panic -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1"
+    probe_channels = "ffprobe -v panic -show_entries stream=channels -of default=noprint_wrappers=1:nokey=1"
+    probe_rate = "ffprobe -v panic -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1"
+
+
+    def normal_probe_or_specific_probe(self, dict_, key, command):
+        try:
+            value = dict_[key]
+        except KeyError:
+            print(f"{key} not found in {self.path}, with global ffprobe command")
+            result = subprocess.run(
+                f"{command} \"{self.path}\"",
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            value = result.stdout
+            print(f"{key} found with specific ffprobe command: {value}")
+
+        return value
+
+
 
     def __init__(
             self,
@@ -93,12 +118,15 @@ class ABC_Video(ABC):
         audio = next((s for s in data["streams"] if s["codec_type"] == "audio"), None)
         # text = next((s for s in data["streams"] if s["codec_type"] == "subtitle"), None)
 
-        self.length = float(video["duration"])
-        self.width = int(video["width"])
-        self.height = int(video["height"])
-        self.fps = int(video["r_frame_rate"].split("/")[0]) // int(video["r_frame_rate"].split("/")[1])
-        self.channels = int(audio["channels"])
-        self.rate = int(audio["sample_rate"])
+        self.length = float(self.normal_probe_or_specific_probe(video, "duration", self.probe_duration))
+        self.width = int(self.normal_probe_or_specific_probe(video, "width", self.probe_width))
+        self.height = int(self.normal_probe_or_specific_probe(video, "height", self.probe_height))
+        self.channels = int(self.normal_probe_or_specific_probe(audio, "channels", self.probe_channels))
+        self.rate = int(self.normal_probe_or_specific_probe(audio, "sample_rate", self.probe_rate))
+
+        fps_1, fps_2 = self.normal_probe_or_specific_probe(video, "r_frame_rate", self.probe_fps).split("/")
+        self.fps = int(fps_1) // int(fps_2)
+
 
     def rename_to_final(
             self,
