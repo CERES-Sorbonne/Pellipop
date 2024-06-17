@@ -223,7 +223,7 @@ class Pellipop:
                     pbar.write(f"Collision détectée: {img.name} -> {new_img.name}")
                 else:
                     print(f"Collision détectée: {img.name} -> {new_img.name}")
-                    img.unlink()
+                    new_img.unlink()
                 # continue
             img.rename(new_img)
             pass
