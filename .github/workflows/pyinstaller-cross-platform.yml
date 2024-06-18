@@ -234,9 +234,9 @@ jobs:
           --onefile \
           --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
           --hidden-import='PIL._tkinter_finder' \
-          --windowed \
-          --icon ./pellipop/pellipop.ico
-#          --hide-console hide-early # Weird things happen
+          --icon ./pellipop/pellipop.ico \
+        #          --windowed
+        #          --hide-console hide-early # Weird things happen
 
         # One file -> a unique executable
         # pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} -> Name of the executable
