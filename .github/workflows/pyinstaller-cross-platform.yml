@@ -227,6 +227,7 @@ jobs:
 #            fi
 
       - name: Build with pyinstaller
+        if: matrix.os != 'macos-latest' && matrix.os != 'macos-14'
         run: |
           ls pellipop # Debug purposes
 
@@ -234,7 +235,7 @@ jobs:
           --onefile \
           --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
           --hidden-import='PIL._tkinter_finder' \
-          --icon ./pellipop/pellipop.ico \
+          --icon ./pellipop/pellipop.ico
         #          --windowed
         #          --hide-console hide-early # Weird things happen
 
@@ -248,6 +249,17 @@ jobs:
         #  run: |
         #  mkdir -p ./dist
         #  echo "Fake build for ${{ matrix.os }}" > ./dist/pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }}
+      - name: Build with pyinstaller
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-14'
+        run: |
+          ls pellipop # Debug purposes
+
+          pyinstaller pellipop/gui.py \
+          --onefile \
+          --name=pellipop-${{ env.OS }}-${{ needs.envs.outputs.ver }} \
+          --hidden-import='PIL._tkinter_finder' \
+          --icon ./pellipop/pellipop.ico \
+          --windowed
 
       - name: Check build
         run: |
