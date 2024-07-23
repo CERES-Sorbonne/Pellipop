@@ -5,7 +5,11 @@ from subprocess import check_output, STDOUT
 def get_version():
     if "pellipop" in sys.modules:
         del sys.modules["pellipop"]
+    if "pellipop.__about__" in sys.modules:
+        del sys.modules["pellipop.__about__"]
+
     from pellipop.__about__ import __version__
+
     return __version__
 
 def pip():
