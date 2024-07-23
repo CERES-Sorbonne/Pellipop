@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from sys import argv
+from typing import Optional
 
 from pellipop.__about__ import __version__
 from pellipop.path_fixer import Path
@@ -58,7 +59,7 @@ parser.add_argument(
 )
 
 
-def main() -> dict[str, Path | None]:
+def main() -> dict[str, Optional[Path]]:
     args = parser.parse_args()
 
     if args.gui or len(argv) < 2:
