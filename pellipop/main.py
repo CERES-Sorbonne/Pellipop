@@ -106,6 +106,7 @@ class Pellipop:
         self.offset = offset
 
         self.videos = [Video(f, reduce=reduce, offset=offset, parents_in_name=parents_in_name) for f in self.fichiers]
+        self.videos = [v for v in self.videos if v.success]
 
     def launch(self) -> Optional[Path]:
         exec_dir = Path(__file__).parent

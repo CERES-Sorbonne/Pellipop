@@ -109,10 +109,14 @@ class ABC_Video(ABC):
         self.final_stem_attr = "_".join([p for p in parents] + [self.get_reduce()])
         return self.final_stem_attr
 
-    def get_info(self) -> None:
+    def get_info(self) -> bool:
         command = f'{self.probe} "{self.path}"'
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         data = json.loads(result.stdout)
+
+        if "streams" not in data:
+            print(f"No streams found in {self.path}")
+            return False
 
         video = next((s for s in data["streams"] if s["codec_type"] == "video"), None)
         audio = next((s for s in data["streams"] if s["codec_type"] == "audio"), None)
@@ -126,6 +130,8 @@ class ABC_Video(ABC):
 
         fps_1, fps_2 = self.normal_probe_or_specific_probe(video, "r_frame_rate", self.probe_fps).split("/")
         self.fps = int(fps_1) // int(fps_2)
+
+        return True
 
 
     def rename_to_final(
@@ -220,7 +226,7 @@ class Video(ABC_Video):
         self.get_reduce()
         self.get_parents()
 
-        self.get_info()
+        self.success = self.get_info()
 
 
 class DummyVideo(ABC_Video):
