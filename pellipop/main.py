@@ -105,7 +105,7 @@ class Pellipop:
         self.reduce = reduce
         self.offset = offset
 
-        self.videos = [Video(f, reduce=reduce, offset=offset, parents_in_name=parents_in_name) for f in self.fichiers]
+        self.videos = [Video(f, reduce=reduce, offset=offset, parents_in_name=parents_in_name) for f in tqdm(self.fichiers, desc="Initialisation des vidéos", unit=" vidéos", total=self.hm)]
         self.videos = [v for v in self.videos if v.success]
 
     def launch(self) -> Optional[Path]:
@@ -188,8 +188,13 @@ class Pellipop:
             else:
                 output_folder.mkdir(parents=True, exist_ok=True)
 
+            if not video.has_audio:
+                commmand_instance = command.replace(self.map_parts["audio_part"], "")
+            else:
+                commmand_instance = command
+
             commmand_instance = (
-                command
+                commmand_instance
                 .replace("$OUTPUT_FOLDER_AUDIO", str(self.outputs["audio"]))
                 .replace("$OUTPUT_FOLDER", str(output_folder))
                 .replace("$FILE_STEM", fichier.stem)

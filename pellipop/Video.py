@@ -65,6 +65,8 @@ class ABC_Video(ABC):
         self.channels: Optional[int] = None
         self.rate: Optional[int] = None
 
+        self.has_audio: Optional[bool] = None
+
     @property
     def name(self) -> str:
         return self.path.name
@@ -125,8 +127,13 @@ class ABC_Video(ABC):
         self.length = float(self.normal_probe_or_specific_probe(video, "duration", self.probe_duration))
         self.width = int(self.normal_probe_or_specific_probe(video, "width", self.probe_width))
         self.height = int(self.normal_probe_or_specific_probe(video, "height", self.probe_height))
-        self.channels = int(self.normal_probe_or_specific_probe(audio, "channels", self.probe_channels))
-        self.rate = int(self.normal_probe_or_specific_probe(audio, "sample_rate", self.probe_rate))
+
+        if audio is not None:
+            self.channels = int(self.normal_probe_or_specific_probe(audio, "channels", self.probe_channels))
+            self.rate = int(self.normal_probe_or_specific_probe(audio, "sample_rate", self.probe_rate))
+            self.has_audio = True
+        else:
+            self.has_audio = False
 
         fps_1, fps_2 = self.normal_probe_or_specific_probe(video, "r_frame_rate", self.probe_fps).split("/")
         self.fps = int(fps_1) // int(fps_2)
