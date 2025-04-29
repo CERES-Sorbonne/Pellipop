@@ -2,11 +2,11 @@ import json
 import sys
 from pathlib import Path
 
+from filedetect import FileDetect
 from tqdm.auto import tqdm
 from whisper_client.main import WhisperClient, Mode
 
 from pellipop.Video import Video
-from pellipop.file_finder import file_finder
 
 
 def rm_tree(pth: Path) -> None:
@@ -45,7 +45,7 @@ def toText(
 
     if not audioPath.exists():
         print("The audio file does not exist")
-        sys.exit(1)
+        raise FileNotFoundError(f"{audioPath} does not exist")
 
     if textPath.exists():
         print("The text file already exists")
@@ -100,12 +100,21 @@ def toTextFolder(
             **config_data
         )
 
-    audios = tqdm(list(file_finder(audioPath, file_type="audio")))
+    audios = tqdm(
+        FileDetect.find(
+            audioPath,
+            format="audio",
+        ),
+        desc="Audio files", unit="file"
+    )
     for audio in audios:
         text = textPath / audio.with_suffix(".json").name \
             if mode != Mode.text else textPath / audio.with_suffix(".txt").name
-
-        toText(config_data, audio, text, wc=wc, mode=mode)
+        try:
+            toText(config_data, audio, text, wc=wc, mode=mode)
+        except Exception as e:
+            print(f"ERROR : {e}")
+            audios.set_postfix_str("ERROR")
 
 
 def main(
@@ -164,11 +173,18 @@ def main(
 
     if videos:
         for video in videos:
-            toText(config_data, video.audio, video.json_or_text, wc=wc, mode=mode)
+            try:
+                toText(config_data, video.audio, video.json_or_text, wc=wc, mode=mode)
+            except Exception as e:
+                print(f"ERROR : {e}")
+
     elif isinstance(audioPath, list):
         assert isinstance(textPath, list), "ERROR : audioPath is a list but textPath is not"
         for audio, text in zip(audioPath, textPath):
-            toText(config_data, audio, text, wc=wc, mode=mode)
+            try:
+                toText(config_data, audio, text, wc=wc, mode=mode)
+            except Exception as e:
+                print(f"ERROR : {e}")
     elif folder:
         toTextFolder(config_data, audioPath, textPath, wc=wc, mode=mode)
     else:
@@ -176,13 +192,13 @@ def main(
 
 
 if __name__ == "__main__":
-    with open("config.json", "r", encoding="utf-8") as f:
+    with open("../whisper_config.json", "r", encoding="utf-8") as f:
         config_data = json.load(f)
 
     main(
         config_data,
-        audioPath="/home/marceau/PycharmProjects/Pellipop/videos-collecte1/extracted_audio",
-        textPath="/home/marceau/PycharmProjects/Pellipop/txt-collecte1",
+        audioPath="/home/marceau/PycharmProjects/Pellipop/res/audio",
+        textPath="/home/marceau/PycharmProjects/Pellipop/res/text",
         mode=Mode.text,
         folder=True
     )

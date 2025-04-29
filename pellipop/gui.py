@@ -4,9 +4,9 @@ from tkinter import filedialog
 
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
+from filedetect import FileDetect
 
 from pellipop.Video import DummyVideo
-from pellipop.file_finder import how_many_files
 from pellipop.main import Pellipop, default_output_path
 from pellipop.path_fixer import Path
 from pellipop.whisper_from_url import WhisperFromUrl, URLImportError
@@ -113,7 +113,7 @@ def browse_input():
     path = browse(input_folder, mustexist=True, title="Choisissez le dossier à analyser")
     if not path:
         return
-    how_many_str.set(f"{how_many_files(path)} fichiers trouvés")
+    how_many_str.set(f"{len(FileDetect.find(path))} fichiers trouvés")
 
 
 def browse_output():

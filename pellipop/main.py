@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import re
 import subprocess
@@ -8,9 +6,9 @@ from time import sleep
 from typing import Optional
 
 from tqdm.auto import tqdm
+from filedetect import FileDetect
 
 from pellipop.Video import Video
-from pellipop.file_finder import file_finder, how_many_files
 from pellipop.path_fixer import Path
 from pellipop.speech_to_text import whisperMode  # , extractText
 
@@ -98,7 +96,7 @@ class Pellipop:
             "csv": None,
         }
 
-        self.fichiers = sorted(file_finder(self.input_folder), key=lambda x: x.name)
+        self.fichiers = sorted(FileDetect.find(self.input_folder), key=lambda x: x.name)
         self.fichiers_stems = {f.stem for f in self.fichiers}
         self.hm = len(self.fichiers)
 
@@ -422,7 +420,7 @@ class Pellipop:
 if __name__ == "__main__":
     # testdir = "/home/marceau/PycharmProjects/tksel/videos-collecte1"
     testdir = "/home/marceau/Téléchargements/pelli/"
-    print(how_many_files(testdir))
+    print(len(FileDetect.find(testdir)))
 
     config = {
         'intervale': None,
